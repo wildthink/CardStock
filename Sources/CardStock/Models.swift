@@ -60,13 +60,7 @@ extension Note {
     
     static let previewBody = try! AttributedString(markdown:
         """
-        # Sample Title
-        
-        A list of items
-        
-        - one
-        - two
-        - three
+        Some **simple** markdown with a [link](https://apple.com).
         """
     )
 }

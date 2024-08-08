@@ -166,6 +166,10 @@ struct NoteView_Previews: PreviewProvider {
             .cardStyle(cornerRadius: 20, shadowRadius: 6)
             .groupBoxStyle(.card)
         }
+        .environment(\.openURL, OpenURLAction { url in
+            print(url) // Define this method to take appropriate action.
+            return .handled
+        })
         .frame(width: 500)
         .padding(20)
     }
