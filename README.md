@@ -2,7 +2,7 @@
 
 # SwiftUI Card Models and Supporting Views
 
-<img src="https://github.com/wildthink/CardStock/Assets/card_open.png">
+<img src="https://raw.githubusercontent.com/wildthink/CardStock/main/Assets/card_closed.png" width="500">
 
 Cards are a classic design pattern, perfect for mobile devices.
 
