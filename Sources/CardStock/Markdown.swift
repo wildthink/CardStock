@@ -8,6 +8,8 @@
 import Foundation
 
 public extension String {
+    /// Native Support for styling Markdown is limited. This is just a stub to
+    /// hook into later.
     func markdown() -> AttributedString {
         (try? AttributedString(markdown: self)) ?? AttributedString(self)
     }

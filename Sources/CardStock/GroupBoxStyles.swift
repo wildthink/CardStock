@@ -6,8 +6,8 @@
 //
 import SwiftUI
 
-struct CardGroupBoxStyle: GroupBoxStyle {
-    func makeBody(configuration: Configuration) -> some View {
+public struct CardGroupBoxStyle: GroupBoxStyle {
+    public func makeBody(configuration: Configuration) -> some View {
         VStack(alignment: .leading) {
             configuration.label
             configuration.content
@@ -18,17 +18,16 @@ struct CardGroupBoxStyle: GroupBoxStyle {
     }
 }
 
-extension GroupBoxStyle where Self == CardGroupBoxStyle {
+public extension GroupBoxStyle where Self == CardGroupBoxStyle {
     static var card: Self {
         CardGroupBoxStyle()
     }
 }
 
-struct BoxDisclosureStyle: DisclosureGroupStyle {
+public struct BoxDisclosureStyle: DisclosureGroupStyle {
     let pad: CGFloat = 8
-//    let buttonSize: CGFloat = 32
     
-    func makeBody(configuration: Configuration) -> some View {
+    public func makeBody(configuration: Configuration) -> some View {
         let isExpanded = configuration.isExpanded
 
         VStack() {

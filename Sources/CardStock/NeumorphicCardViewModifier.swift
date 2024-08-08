@@ -9,13 +9,18 @@
 
 import SwiftUI
 
-struct NeumorphicCardViewModifier: ViewModifier {
+public struct NeumorphicCardViewModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
     
-    var cornerRadius: CGFloat = 15
-    var depth: CGFloat = 5
+    public var cornerRadius: CGFloat = 15
+    public var depth: CGFloat = 5
     
-    func body(content: Content) -> some View {
+    public init(cornerRadius: CGFloat, depth: CGFloat) {
+        self.cornerRadius = cornerRadius
+        self.depth = depth
+    }
+
+    public func body(content: Content) -> some View {
         content
             .padding()
             .background(
@@ -45,7 +50,7 @@ struct NeumorphicCardViewModifier: ViewModifier {
     }
 }
 
-extension View {
+public extension View {
     func neumorphicCardStyle(cornerRadius: CGFloat = 15, depth: CGFloat = 5) -> some View {
         self.modifier(NeumorphicCardViewModifier(cornerRadius: cornerRadius, depth: depth))
     }

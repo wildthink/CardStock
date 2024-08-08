@@ -8,13 +8,18 @@
 
 import SwiftUI
 
-struct CardViewModifier: ViewModifier {
+public struct CardViewModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
     
     var cornerRadius: CGFloat = 12
     var shadowRadius: CGFloat = 4
     
-    func body(content: Content) -> some View {
+    public init(cornerRadius: CGFloat, shadowRadius: CGFloat) {
+        self.cornerRadius = cornerRadius
+        self.shadowRadius = shadowRadius
+    }
+
+    public func body(content: Content) -> some View {
         content
             .padding()
             .background(backgroundColor)
@@ -31,7 +36,7 @@ struct CardViewModifier: ViewModifier {
     }
 }
 
-extension View {
+public extension View {
     func cardStyle(cornerRadius: CGFloat = 12, shadowRadius: CGFloat = 4) -> some View {
         self.modifier(CardViewModifier(cornerRadius: cornerRadius, shadowRadius: shadowRadius))
     }
