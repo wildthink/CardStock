@@ -2,7 +2,7 @@
 
 # SwiftUI Card Models and Supporting Views
 
-<img src="./Assets/card_open.png">
+<img src="../Assets/card_open.png">
 
 Cards are a classic design pattern, perfect for mobile devices.
 
