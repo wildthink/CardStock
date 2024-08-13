@@ -78,7 +78,7 @@ public struct NoteView: View {
                 }
             }
             
-            if let rating = note.rating {
+            if let rating = note.ratings.first {
                 RatingView(rating: rating)
             }
         }
