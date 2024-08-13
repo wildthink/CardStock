@@ -30,6 +30,7 @@ supporting views.
 - [ ] Improved Markdown support
 - [ ] Image inclusion and placement
 - [ ] Suggestions from our Audience
+- [ ] Flip Card
 
 ### Resources
 

@@ -6,7 +6,11 @@
 //
 
 import Foundation
-
+/*
+ Log line - A logline is a one-sentence summary of the story's main conflict.
+            It is not a statement of theme but rather a premise.
+ lede / abstract
+ */
 // MARK: - Note Data Structure
 
 public enum VisualPlacement: Int, Sendable {
@@ -21,33 +25,83 @@ public enum VisualPlacement: Int, Sendable {
 public struct Note: Identifiable, Sendable {
     
     public let id = EntityID()
+    var _subject: AnySendable?
+    var subject: Sendable? {
+        get { _subject?.value() }
+    }
+
     public var owner: EntityID?
     public var creationDate: Date
     public var lastModifiedDate: Date
     
     public var title: String
     public var subtitle: String?
-    public var tags: [String]
+    
+    var attachments: [Note.Attachment]
+    
     public var domain: String
     public var body: AttributedString
-    public var links: [URL]
-    public var rating: Rating?
-    public var comments: [Comment]
     
-    public init(title: String, subtitle: String? = nil, tags: [String], domain: String, body: AttributedString, creationDate: Date, lastModifiedDate: Date, links: [URL], rating: Rating? = nil, comments: [Comment]) {
+    public init(title: String, subject: (any Sendable)? = nil,
+                subtitle: String? = nil, tags: [String], domain: String,
+                body: AttributedString,
+                creationDate: Date, lastModifiedDate: Date,
+                links: [URL], rating: Rating? = nil, comments: [Comment]
+    ) {
         self.title = title
+        self._subject = .init(subject)
+        
         self.subtitle = subtitle
-        self.tags = tags
-        self.domain = domain
-        self.body = body
         self.creationDate = creationDate
         self.lastModifiedDate = lastModifiedDate
-        self.links = links
-        self.rating = rating
-        self.comments = comments
+
+        self.body = body
+        self.domain = domain
+        self.attachments = []
+        
+        attach(.tag, tags)
+        attach(.link, links)
+        if let rating {
+            attach(.rating, [rating])
+        }
+        attach(.comment, comments)
     }
 }
 
+extension Note {
+    var links: [URL] { components() }
+    var comments: [Comment] { components() }
+    var tags: [String] { components() }
+    var ratings: [Rating] { components() }
+}
+
+public extension Note {
+    enum Component: Int16, Sendable { case any, tag, domain, link, rating, comment }
+    
+    struct Attachment: Sendable {
+        var value: AnySendable
+        let component: Component
+
+        init<S: Sendable>(_ c: Component, _ value: S) {
+            self.component = c
+            self.value = .init(value)
+        }
+    }
+    
+    func components<S: Sendable>(_ c: Component = .any, like t: S.Type = S.self) -> [S] {
+        if c == .any {
+            attachments.compactMap { $0.value(as: t) }
+        } else {
+            attachments.filter({ $0.component == c }).compactMap { $0.value(as: t) }
+        }
+    }
+    
+    mutating
+    func attach<S: Sendable>(_ c: Component, _ values: [S]) {
+        let new = values.map({ Attachment(c, $0) })
+        attachments.append(contentsOf: new)
+    }
+}
 
 
 public struct Comment: Identifiable, Sendable {
