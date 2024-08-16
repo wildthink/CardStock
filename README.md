@@ -31,6 +31,21 @@ supporting views.
 - [ ] Image inclusion and placement
 - [ ] Suggestions from our Audience
 - [ ] Flip Card
+- [x] Support Attachments
+
+
+### Common Cards - Ideas
+
+- [ ] Person
+- [ ] Place/Venue
+- [ ] Photo
+- [ ] Web Sites
+- [ ] Github Project
+- [ ] Swift Package Index Project
+- [ ] Movie
+- [ ] Book - Goodreads, Affiliate Purchase, PDF
+- [ ] Media
+- [ ] YouTube
 
 ### Resources
 

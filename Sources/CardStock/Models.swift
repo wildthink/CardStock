@@ -103,7 +103,24 @@ public extension Note {
     }
 }
 
+// MARK: Note Stencils
+import Stencil
 
+// URL -> Data -> Stencil -> Markdown -> AttributedString
+
+struct NoteContent: Sendable {
+    
+    var buildDate: Date?
+    var subjectType: Any.Type
+    var content: String
+    var body: AttributedString
+    
+    func buildBody() {
+        
+    }
+}
+
+// MARK: Note Components
 public struct Comment: Identifiable, Sendable {
     public let id = EntityID()
     public var author: String
