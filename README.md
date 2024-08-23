@@ -37,6 +37,8 @@ supporting views.
 ### Common Cards - Ideas
 
 - [ ] Person
+    - [ ] Gravatar
+    - [ ] Contact (Apple)
 - [ ] Place/Venue
 - [ ] Photo
 - [ ] Web Sites
@@ -46,6 +48,7 @@ supporting views.
 - [ ] Book - Goodreads, Affiliate Purchase, PDF
 - [ ] Media
 - [ ] YouTube
+- [ ] Wikipedia Entry
 
 ### Resources
 
