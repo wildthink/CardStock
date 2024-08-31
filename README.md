@@ -38,7 +38,7 @@ supporting views.
 
 - [ ] Person
     - [ ] Gravatar
-    - [ ] Contact (Apple)
+    - [ ] Contact (iOS/macOS)
 - [ ] Place/Venue
 - [ ] Photo
 - [ ] Web Sites
@@ -49,6 +49,9 @@ supporting views.
 - [ ] Media
 - [ ] YouTube
 - [ ] Wikipedia Entry
+- [ ] RSS/ATOM Item
+- [ ] Bibliographic Citation
+- [ ] [ArXiv Paper](https://en.wikipedia.org/wiki/ArXiv)
 
 ### Resources
 

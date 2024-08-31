@@ -13,15 +13,6 @@ import Foundation
  */
 // MARK: - Note Data Structure
 
-public enum VisualPlacement: Int, Sendable {
-    case top
-    case bottom
-    case leading
-    case trailing
-    case center
-    case `default`
-}
-
 public struct Note: Identifiable, Sendable {
     
     public let id = EntityID()

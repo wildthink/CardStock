@@ -36,6 +36,15 @@ public struct CardViewModifier: ViewModifier {
     }
 }
 
+public enum VisualPlacement: Int, Sendable {
+    case top
+    case bottom
+    case leading
+    case trailing
+    case center
+    case `default`
+}
+
 public extension View {
     func cardStyle(cornerRadius: CGFloat = 12, shadowRadius: CGFloat = 4) -> some View {
         self.modifier(CardViewModifier(cornerRadius: cornerRadius, shadowRadius: shadowRadius))
