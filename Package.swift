@@ -32,3 +32,11 @@ let package = Package(
         ),
     ]
 )
+
+import Foundation
+func localDependency(_ name: String) -> String {
+    FileManager.default
+        .homeDirectoryForCurrentUser
+        .appending(components: "dev", "packages", name)
+        .path
+}
