@@ -16,10 +16,7 @@ import Foundation
 public struct Note: Identifiable, Sendable {
     
     public let id = EntityID()
-    var _subject: AnySendable?
-    var subject: Sendable? {
-        get { _subject?.value() }
-    }
+    public let subject_id: Int64
 
     public var owner: EntityID?
     public var creationDate: Date
@@ -33,14 +30,14 @@ public struct Note: Identifiable, Sendable {
     public var domain: String
     public var body: AttributedString
     
-    public init(title: String, subject: (any Sendable)? = nil,
+    public init(title: String, subject: Int64 = 0,
                 subtitle: String? = nil, tags: [String], domain: String,
                 body: AttributedString,
                 creationDate: Date, lastModifiedDate: Date,
                 links: [URL], rating: Rating? = nil, comments: [Comment]
     ) {
         self.title = title
-        self._subject = .init(subject)
+        self.subject_id = subject
         
         self.subtitle = subtitle
         self.creationDate = creationDate
@@ -69,21 +66,23 @@ extension Note {
 public extension Note {
     enum Component: Int16, Sendable { case any, tag, domain, link, rating, comment }
     
-    struct Attachment: Sendable {
-        var value: AnySendable
+    struct Attachment: @unchecked Sendable {
+        var value: Any
+        let valueType: Any.Type
         let component: Component
 
-        init<S: Sendable>(_ c: Component, _ value: S) {
+        init<S>(_ c: Component, _ value: S) {
             self.component = c
-            self.value = .init(value)
+            self.value = value
+            self.valueType = S.self
         }
     }
     
-    func components<S: Sendable>(_ c: Component = .any, like t: S.Type = S.self) -> [S] {
+    func components<S>(_ c: Component = .any, like t: S.Type = S.self) -> [S] {
         if c == .any {
-            attachments.compactMap { $0.value(as: t) }
+            attachments.compactMap { $0.value as? S }
         } else {
-            attachments.filter({ $0.component == c }).compactMap { $0.value(as: t) }
+            attachments.filter({ $0.component == c }).compactMap { $0.value as? S }
         }
     }
     
@@ -95,7 +94,7 @@ public extension Note {
 }
 
 // MARK: Note Stencils
-import Stencil
+import Mustache
 
 // URL -> Data -> Stencil -> Markdown -> AttributedString
 

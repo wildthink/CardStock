@@ -7,7 +7,7 @@
 import SwiftUI
 
 public struct RatingView: View {
-    public var rating: Rating
+    let rating: Rating
     
     public init(rating: Rating) {
         self.rating = rating
