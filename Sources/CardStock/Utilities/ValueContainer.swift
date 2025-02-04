@@ -12,9 +12,7 @@ import Foundation
 struct ValueContainer <Subject> {
     var store: [AnyHashable: Any]
     var defaultValue: Subject
-    
-    var styles: [any FormatStyle] = []
-    
+
     subscript<M>(dynamicMember key: KeyPath<Subject,M>) -> M {
         get { store[key] as? M ?? defaultValue[keyPath: key] }
     }
@@ -23,12 +21,7 @@ struct ValueContainer <Subject> {
         get { store[key] as? M ?? defaultValue[keyPath: key] }
         set { store[key] = newValue }
     }
-    
-    func demo() {
-        let f = styles[0]
-        let it = try? f.format(any: 45)
-        print(it)
-    }
+
 }
 
 extension FormatStyle {

@@ -94,7 +94,6 @@ public extension Note {
 }
 
 // MARK: Note Stencils
-import Mustache
 
 // URL -> Data -> Stencil -> Markdown -> AttributedString
 
