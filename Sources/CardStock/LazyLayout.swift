@@ -20,7 +20,7 @@ struct MasonryLayout: LazyLayout {
 
     func rects(proposed: ProposedViewSize, subviews: Subviews) -> ([CGRect], minColumnY: CGFloat) {
         var columnYs = Array(repeating: CGFloat(0), count: numberOfColumns)
-        var columnWidth = proposed.width.map { $0 / .init(numberOfColumns) } ?? 10
+        let columnWidth = proposed.width.map { $0 / .init(numberOfColumns) } ?? 10
 
         return (subviews.map { subview in
             let currentColumnIdx = columnYs.indices.sorted(by: { columnYs[$0] < columnYs[$1] }).first!
@@ -32,7 +32,7 @@ struct MasonryLayout: LazyLayout {
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        var (frames, minY) = rects(proposed: proposal, subviews: subviews)
+        let (frames, minY) = rects(proposed: proposal, subviews: subviews)
         var size = frames.reduce(CGRect.null, { $0.union($1) }).size
         if moreSubviewsAvailable {
             size.height = minY

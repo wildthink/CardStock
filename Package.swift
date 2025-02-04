@@ -15,7 +15,7 @@ let package = Package(
             targets: ["CardStock"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/stencilproject/Stencil.git", from: "0.15.1"),
+//        .package(url: "https://github.com/stencilproject/Stencil.git", from: "0.15.1"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -23,7 +23,7 @@ let package = Package(
         .target(
             name: "CardStock",
             dependencies: [
-                .product(name: "Stencil", package: "stencil"),
+//                .product(name: "Stencil", package: "stencil"),
             ]
         ),
         .testTarget(
