@@ -16,7 +16,7 @@ public struct MediaProvider: Sendable {
 public extension MediaProvider {
     func resolve(url : URL) throws -> URL {
         if url.isFileURL {
-            guard let fileURL = Bundle.module
+            guard let fileURL = Bundle.mediaImages
                 .url(forResource: url.host(), withExtension: nil)
             else {
                 throw MediaProviderError.cannotResolove(url.description)
