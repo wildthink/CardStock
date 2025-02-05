@@ -117,8 +117,6 @@ struct TableRow: View {
                         .foregroundStyle(.secondary)
                         .padding(.trailing)
                 }
-//                Text(card.subtitle ?? "")
-//                    .font(.caption)
             }
             .padding(.vertical)
         }
@@ -176,7 +174,6 @@ struct Landscape: View {
             VStack(alignment: .leading) {
                 Text(card.title)
                     .font(.headline)
-//                    .alignmentGuide(.leading) { $0.width - 20 }
                 if let body = card.body {
                     Text(body)
                         .font(.caption)
@@ -186,7 +183,6 @@ struct Landscape: View {
                     .font(.caption)
             }
             .frame(width: size.width - 4, alignment: .leading)
-//            .border(.red)
             .padding(.leading, 4)
         }
             .background(Color.gray.opacity(0.1))

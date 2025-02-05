@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "CardStock",
     platforms: [
-        .macOS(.v14), .iOS(.v17),
+        .macOS(.v15), .iOS(.v18),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -15,7 +15,7 @@ let package = Package(
             targets: ["CardStock"]),
     ],
     dependencies: [
-//        .package(url: "https://github.com/stencilproject/Stencil.git", from: "0.15.1"),
+        .package(url: "https://github.com/swiftlang/swift-markdown.git", branch: "main"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -23,12 +23,15 @@ let package = Package(
         .target(
             name: "CardStock",
             dependencies: [
-//                .product(name: "Stencil", package: "stencil"),
+                .product(name: "Markdown", package: "swift-markdown"),
             ]
         ),
         .testTarget(
             name: "CardStockTests",
-            dependencies: ["CardStock"]
+            dependencies: [
+                "CardStock",
+                .product(name: "Markdown", package: "swift-markdown"),
+            ]
         ),
     ]
 )
