@@ -13,7 +13,17 @@ import Markdown
 
 struct StringDesign: Sendable {
 
+    var typography: Typography = Typography()
+    
     var plain: AttributeContainer = AttributeContainer()
+
+    var thematicBreak: AttributedString = {
+        var str = AttributedString("\n\u{00A0} \u{0009} \u{00A0}\n")
+        str.underlineStyle = .double
+        str.underlineColor = .gray
+        str.foregroundColor = .gray
+        return str
+    }()
 
     func attributes(for node: InlineAttributes) -> AttributeContainer {
         // FIXME: Check for URL's vs other parameters (eg style)
@@ -34,20 +44,87 @@ struct StringDesign: Sendable {
         container.font = .systemFont(ofSize: fontSize(forHeading: heading.level))
         return container
     }
+    
+    // https://github.com/NateBaldwinDesign/proportio/
+    enum FontScale: CGFloat {
+        case minorSecond = 1.067
+        case majorSecond = 1.125
+        case minorThird = 1.2
+        case majorThird = 1.25
+        case perfectFourth = 1.333
+        case minorFifth = 1.5
+        case majorFifth = 1.667
+        case minorSixth = 1.8
+        case majorSixth = 2
+    }
+    
+    var typographyScale: FontScale = .perfectFourth
+    var typographyBase: CGFloat = 12
+    var typographyMaxLevel: Int = 6
+    
+    var baseCornerRadius: CGFloat = 4
+    var radiusScale: CGFloat = 2
+    
+    func cornerRadius(level: CGFloat) -> CGFloat {
+        baseCornerRadius * pow(radiusScale, level)
+    }
+    
+    func elevation(level: CGFloat) -> CGFloat {
+        baseCornerRadius * pow(radiusScale, level)
+    }
 
-    func fontSize(forHeading level: Int) -> CGFloat {
-        switch level {
-        case 1: return 34  // H1
-        case 2: return 28  // H2
-        case 3: return 22  // H3
-        case 4: return 20  // H4
-        case 5: return 18  // H5
-        case 6: return 16  // H6
-        default: return 14 // Default size for body text or unsupported levels
+    func padding(level: Int, base: CGFloat? = nil) -> CGPoint {
+        let pt = round(fontScale(level: level, base: base)/1.333)
+        return CGPoint(x: pt, y: pt)
+    }
+    
+    func calculateScale(baseSize: CGFloat, scale: CGFloat, increment: CGFloat, scaleMethod: String) -> CGFloat {
+        if (scaleMethod == "power") {
+            baseSize * pow(scale, increment)
+        } else if (scaleMethod == "linear") {
+            baseSize + scale * increment
+        } else { scale * baseSize }
+    }
+    
+    func typeIconSpace(level: Int, base: CGFloat? = nil) -> CGFloat {
+        round(fontScale(level: level, base: base)/3.0)
+    }
+    
+    func fontScale(level: Int, base: CGFloat? = nil) -> CGFloat {
+        let scale = typographyScale
+        let base = base ?? typographyBase
+        return if level < 1 {
+            round(base * pow(1.0/scale.rawValue, CGFloat(-level)))
+        } else {
+            round(base * pow(scale.rawValue, CGFloat(level)))
+        }
+    }
+
+    func fontSize(forHeading level: Int, base: CGFloat? = nil) -> CGFloat {
+        return if level > 0 {
+            fontScale(level: typographyMaxLevel-level, base: base)
+        } else {
+            fontScale(level: level, base: base)
         }
     }
     
-    enum Style { case emphasis, strong }
+    enum Style { case emphasis, strong, code }
+    var baseFontSize: CGFloat = 14
+    
+    func attributed(code: String, language: String? = nil) -> AttributedString {
+        var txt = RichText(code)
+        return if language != nil {
+            // TODO: Real Code Styling
+            apply(.code, to: &txt)
+        } else {
+            txt
+        }
+    }
+
+    func attributedString(for code: String, style: Style) -> AttributedString {
+        var txt = RichText(code)
+        return apply(style, to: &txt)
+    }
     
     func apply(_ style: Style, to txt: inout RichText) -> RichText {
         switch style {
@@ -55,6 +132,9 @@ struct StringDesign: Sendable {
             txt.underlineStyle = .single
         case .strong:
             txt.underlineStyle = .double
+        case .code:
+            txt.foregroundColor = .systemGray
+            txt.font = .monospacedSystemFont(ofSize: baseFontSize, weight: .regular)
         }
         return txt
     }
@@ -97,13 +177,6 @@ public struct Markdownosaur: MarkupVisitor {
     
     mutating public func defaultVisit(_ markup: Markup) -> RichText {
         richText(for: markup.children)
-//        var result = RichText()
-//        
-//        for child in markup.children {
-//            result.append(visit(child))
-//        }
-//        
-//        return result
     }
     
     mutating public
@@ -132,11 +205,15 @@ public struct Markdownosaur: MarkupVisitor {
         return design.apply(.strong, to: &txt)
     }
     
+    var paragraphTrailingLines: String {
+        "\n\n"
+    }
+
     mutating public func visitParagraph(_ paragraph: Paragraph) -> RichText {
         var result = richText(for: paragraph.children)
         
         if paragraph.hasSuccessor {
-            result += (paragraph.isContainedInList ? "\n" : "\n\n")
+            result += (paragraph.isContainedInList ? "\n" :  "\n\n")
         }
         
         return result
@@ -195,19 +272,19 @@ public struct Markdownosaur: MarkupVisitor {
         RichText(inlineHTML.rawHTML)
     }
 
-//    mutating public func visitInlineCode(_ inlineCode: InlineCode) -> RichText {
-//        return RichText(string: inlineCode.code, attributes: [.font: XFont.monospacedSystemFont(ofSize: baseFontSize - 1.0, weight: .regular), .foregroundColor: XColor.systemGray])
-//    }
+    mutating public func visitInlineCode(_ inlineCode: InlineCode) -> RichText {
+        design.attributedString(for: inlineCode.code, style: .code)
+    }
     
-//    public func visitCodeBlock(_ codeBlock: CodeBlock) -> RichText {
-//        let result = NSMutableAttributedString(string: codeBlock.code, attributes: [.font: XFont.monospacedSystemFont(ofSize: baseFontSize - 1.0, weight: .regular), .foregroundColor: XColor.systemGray])
-//        
-//        if codeBlock.hasSuccessor {
-//            result.append(.singleNewline(withFontSize: baseFontSize))
-//        }
-//    
-//        return result
-//    }
+    public func visitCodeBlock(_ codeBlock: CodeBlock) -> RichText {
+        var result = design.attributed(code: codeBlock.code, language: codeBlock.language)
+
+        if codeBlock.hasSuccessor {
+            result += "\n"
+        }
+    
+        return result
+    }
     
     mutating public func visitStrikethrough(_ strikethrough: Strikethrough) -> RichText {
         var result = richText(for: strikethrough.children)
@@ -215,114 +292,83 @@ public struct Markdownosaur: MarkupVisitor {
         return result
     }
     
-//    mutating public func visitUnorderedList(_ unorderedList: UnorderedList) -> RichText {
-//        var result = RichText()
-//        
-//        let font = XFont.systemFont(ofSize: baseFontSize, weight: .regular)
-//                
-//        for listItem in unorderedList.listItems {
-//            var listItemAttributes: [RichText.Key: Any] = [:]
-//            
-//            let listItemParagraphStyle = NSMutableParagraphStyle()
-//            
-//            let baseLeftMargin: CGFloat = 15.0
-//            let leftMarginOffset = baseLeftMargin + (20.0 * CGFloat(unorderedList.listDepth))
-//            let spacingFromIndex: CGFloat = 8.0
-//            let bulletWidth = ceil(RichText(string: "•", attributes: [.font: font]).size().width)
-//            let firstTabLocation = leftMarginOffset + bulletWidth
-//            let secondTabLocation = firstTabLocation + spacingFromIndex
-//            
-//            listItemParagraphStyle.tabStops = [
-//                NSTextTab(textAlignment: .right, location: firstTabLocation),
-//                NSTextTab(textAlignment: .left, location: secondTabLocation)
-//            ]
-//            
-//            listItemParagraphStyle.headIndent = secondTabLocation
-//            
-//            listItemAttributes[.paragraphStyle] = listItemParagraphStyle
-//            listItemAttributes[.font] = XFont.systemFont(ofSize: baseFontSize, weight: .regular)
-//            listItemAttributes[.listDepth] = unorderedList.listDepth
-//            
-//            let listItemAttributedString = visit(listItem).mutableCopy() as! NSMutableAttributedString
-//            listItemAttributedString.insert(RichText(string: "\t• ", attributes: listItemAttributes), at: 0)
-//            
-//            result.append(listItemAttributedString)
-//        }
-//        
-//        if unorderedList.hasSuccessor {
-//            result.append(.doubleNewline(withFontSize: baseFontSize))
-//        }
-//        
-//        return result
-//    }
+    mutating public
+    func visitOrderedList(_ orderedList: OrderedList) -> RichText {
+        visit(list: orderedList)
+    }
+
+    mutating public
+    func visitUnorderedList(_ unorderedList: UnorderedList) -> RichText {
+        visit(list: unorderedList)
+    }
+
+    mutating private func visit(list: ListItemContainer) -> RichText {
+
+        let isOrdered = list is OrderedList
+        var result: RichText = ""
+        
+        for (item, number) in zip(list.listItems, 1...) {
+
+            let prefix: String = switch item.checkbox {
+                case .checked: "[x]"
+                case .unchecked: "[  ]"
+                case _ where isOrdered:
+                    "\(number)."
+                default:
+                "•"  // TODO: design.bullet
+            }
+            result.append(AttributedString("\t\(prefix) "))
+            result.append(visit(item))
+        }
+        result += "\n"
+        return result
+    }
     
-//    mutating public func visitListItem(_ listItem: ListItem) -> RichText {
-//        var result = RichText()
-//        
-//        for child in listItem.children {
-//            result.append(visit(child))
-//        }
-//        
-//        if listItem.hasSuccessor {
-//            result.append(.singleNewline(withFontSize: baseFontSize))
-//        }
-//        
-//        return result
-//    }
+    func paragraphStyle(for list: ListItemContainer) -> AttributeContainer {
+        let style = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
+        style.headIndent = 0
+//        return style
     
-//    mutating public func visitOrderedList(_ orderedList: OrderedList) -> RichText {
-//        var result = RichText()
-//        
-//        for (index, listItem) in orderedList.listItems.enumerated() {
-//            var listItemAttributes: [RichText.Key: Any] = [:]
-//            
-//            let font = XFont.systemFont(ofSize: baseFontSize, weight: .regular)
-//            let numeralFont = XFont.monospacedDigitSystemFont(ofSize: baseFontSize, weight: .regular)
-//            
-//            let listItemParagraphStyle = NSMutableParagraphStyle()
-//            
-//            // Implement a base amount to be spaced from the left side at all times to better visually differentiate it as a list
-//            let baseLeftMargin: CGFloat = 15.0
-//            let leftMarginOffset = baseLeftMargin + (20.0 * CGFloat(orderedList.listDepth))
-//            
-//            // Grab the highest number to be displayed and measure its width (yes normally some digits are wider than others but since we're using the numeral mono font all will be the same width in this case)
-//            let highestNumberInList = orderedList.childCount
-//            let numeralColumnWidth = ceil(RichText(string: "\(highestNumberInList).", attributes: [.font: numeralFont]).size().width)
-//            
-//            let spacingFromIndex: CGFloat = 8.0
-//            let firstTabLocation = leftMarginOffset + numeralColumnWidth
-//            let secondTabLocation = firstTabLocation + spacingFromIndex
-//            
-//            listItemParagraphStyle.tabStops = [
-//                NSTextTab(textAlignment: .right, location: firstTabLocation),
-//                NSTextTab(textAlignment: .left, location: secondTabLocation)
-//            ]
-//            
-//            listItemParagraphStyle.headIndent = secondTabLocation
-//            
-//            listItemAttributes[.paragraphStyle] = listItemParagraphStyle
-//            listItemAttributes[.font] = font
-//            listItemAttributes[.listDepth] = orderedList.listDepth
-//
-//            let listItemAttributedString = visit(listItem).mutableCopy() as! NSMutableAttributedString
-//            
-//            // Same as the normal list attributes, but for prettiness in formatting we want to use the cool monospaced numeral font
-//            var numberAttributes = listItemAttributes
-//            numberAttributes[.font] = numeralFont
-//            
-//            let numberAttributedString = RichText(string: "\t\(index + 1).\t", attributes: numberAttributes)
-//            listItemAttributedString.insert(numberAttributedString, at: 0)
-//            
-//            result.append(listItemAttributedString)
-//        }
-//        
-//        if orderedList.hasSuccessor {
-//            result.append(orderedList.isContainedInList ? .singleNewline(withFontSize: baseFontSize) : .doubleNewline(withFontSize: baseFontSize))
-//        }
-//        
-//        return result
-//    }
+        style.tabStops[0] = NSTextTab(textAlignment: .right, location: style.tabStops[0].location)
+        style.tabStops[1] = NSTextTab(textAlignment: .left, location: style.tabStops[0].location + 10)
+        style.headIndent += style.tabStops[1].location
+        style.paragraphSpacing = 0 // Remove spacing between list items
+
+        var textstyle = AttributeContainer()
+        textstyle.paragraphStyle = style
+        return textstyle
+    }
+
+    mutating public
+    func visitListItem(_ listItem: ListItem) -> RichText {
+//        stylesheet.listItem(attributes: &attributes, checkbox: listItem.checkbox?.bool)
+
+//        richText(for: listItem.children)
+        var first = true
+        var result = RichText()
+        
+        for child in listItem.children {
+            result.append(visit(child))
+            if first {
+                result += "\n"
+                first = false
+            }
+        }
+        return result
+    }
+
+    mutating public
+    func visitBlockQuote(_ blockQuote: BlockQuote) -> RichText {
+        richText(for: blockQuote.children)
+        //        stylesheet.blockQuote(attributes: &attributes)
+    }
+
+    mutating public
+    func visitThematicBreak(_ thematicBreak: ThematicBreak) -> RichText {
+        return design.thematicBreak
+    }
     
+
 //    mutating public func visitBlockQuote(_ blockQuote: BlockQuote) -> RichText {
 //        var result = RichText()
 //        
@@ -434,18 +480,6 @@ extension Markup {
         return false
     }
 }
-
-//extension RichText {
-//    static func singleNewline(withFontSize fontSize: CGFloat) -> RichText {
-//        RichText("\n")
-////        return RichText(string: "\n", attributes: [.font: XFont.systemFont(ofSize: fontSize, weight: .regular)])
-//    }
-//    
-//    static func doubleNewline(withFontSize fontSize: CGFloat) -> RichText {
-//        RichText("\n\n")
-////        return RichText(string: "\n", attributes: [.font: XFont.systemFont(ofSize: fontSize, weight: .regular)])
-//    }
-//}
 
 public extension String {
     /// Native Support for styling Markdown is limited. This is just a stub to

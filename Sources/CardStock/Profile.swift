@@ -19,7 +19,6 @@ struct ProfileView: View {
                 Text(mdp.attributedString(from: doc))
                 Divider()
                 img
-                Text(foo())
                 Divider()
                 Text(doc.debugDescription())
             }
@@ -31,12 +30,12 @@ struct ProfileView: View {
     }
 }
 
-func foo() -> AttributedString {
-    let img = NSImage(systemSymbolName: "message.badge.filled.fill", accessibilityDescription: nil)!
-    let attachment = NSTextAttachment(data: nil, ofType: "")
-    attachment.image = img
-    return AttributedString(NSAttributedString(attachment: attachment))
-}
+//func foo() -> AttributedString {
+//    let img = NSImage(systemSymbolName: "message.badge.filled.fill", accessibilityDescription: nil)!
+//    let attachment = NSTextAttachment(data: nil, ofType: "")
+//    attachment.image = img
+//    return AttributedString(NSAttributedString(attachment: attachment))
+//}
 
 #if os(macOS)
 import Cocoa
@@ -69,15 +68,33 @@ extension NSImage {
 }
 
 let profileDoc: Document = Document(parsing: """
-# Jason Jobe
-## Tinker, Maker, Smith
+# Heading I
+## Heading II
 ### Heading III
 #### Heading IV
+##### Heading V
+###### Heading VI
+
 ^[email](mailto:box@example.com)
 
 [example.com](https://example.com)
 
 ![Image_x](https://wildthink.com/apps/Images/AppIcon.png)
+
+##### List
+1. one
+1. two
+- [ ] check
+- [x] checked
+- three
+
+One sentence here.
+
+```
+Some code
+line 2
+line 3
+```
 
 """,
 options: [.parseBlockDirectives]

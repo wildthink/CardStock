@@ -21,6 +21,7 @@ func ¨(_ lhs: String) -> String {
 func sample() {
     let x = ¨("okay")
     let y = ∫"okay"
+    print(x, y)
 }
 
 func Ω() {

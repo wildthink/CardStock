@@ -42,7 +42,7 @@ final class carbonTests: XCTestCase {
     
     func testAttributedString() {
 //        print(dateString)
-        var doc: Document = profileDoc
+        let doc: Document = profileDoc
         var mdp = Markdownosaur()
         let attrString = mdp.attributedString(from: doc)
         print(attrString)
