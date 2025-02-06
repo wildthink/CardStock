@@ -15,7 +15,7 @@ struct Typography {
     
     var baseCornerRadius: CGFloat = 4
     var radiusScale: CGFloat = 2
-
+    
     // https://github.com/NateBaldwinDesign/proportio/
     enum FontScale: CGFloat, CaseIterable {
         case minorSecond = 1.067
@@ -28,7 +28,7 @@ struct Typography {
         case minorSixth = 1.8
         case majorSixth = 2
     }
-        
+    
     func cornerRadius(level: CGFloat) -> CGFloat {
         baseCornerRadius * pow(radiusScale, level)
     }
@@ -36,7 +36,7 @@ struct Typography {
     func elevation(level: CGFloat) -> CGFloat {
         baseCornerRadius * pow(radiusScale, level)
     }
-
+    
     func padding(level: Int, base: CGFloat? = nil) -> CGPoint {
         let pt = round(fontScale(level: level, base: base)/1.333)
         return CGPoint(x: pt, y: pt)
@@ -63,7 +63,7 @@ struct Typography {
             round(base * pow(scale.rawValue, CGFloat(level)))
         }
     }
-
+    
     func fontSize(forHeading level: Int, base: CGFloat? = nil) -> CGFloat {
         return if level > 0 {
             fontScale(level: typographyMaxLevel-level, base: base)
@@ -77,42 +77,63 @@ struct Proportio: View {
     var pad: CGFloat = 16
     
     var body: some View {
-        Text("""
+        VStack {
+            component
+            container(gap: pad, Text(
+        """
         Lorem ipsum dolor sit amet, consectetur adipiscing elit.
         Maecenas non nisl ac dui gravida pellentesque. Phasellus
         et cursus dui, at fringilla risus. Vestibulum a tortor 
         euismod, fermentum tortor sed, euismod turpis.
         """)
-        .padding(pad)
-        .overlay {
-            ZStack {
-                RoundedRectangle(cornerRadius: pad)
-                    .stroke(Color.gray, lineWidth: 1)
-                VStack {
-                    Rectangle().frame(width: pad, height: pad)
-                    Spacer()
-                    Rectangle().frame(width: pad, height: pad)
+            )
+        }
+    }
+    
+    @ViewBuilder
+    var component: some View {
+        container(
+            Label("Hello, World!", systemImage: "star.fill")
+        )
+    }
+    
+    @ViewBuilder
+    func container<C: View>(
+        gap pad: CGFloat = 8,
+        cornerRadius: CGFloat = 8,
+        _ content: C
+    ) -> some View {
+        content
+            .padding(pad)
+            .overlay {
+                ZStack {
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .stroke(Color.gray, lineWidth: 1)
+                    VStack {
+                        Rectangle().frame(width: pad, height: pad)
+                        Spacer()
+                        Rectangle().frame(width: pad, height: pad)
+                    }
+                    .foregroundStyle(.orange)
+                    HStack {
+                        Rectangle().frame(width: pad, height: pad)
+                        Spacer()
+                        Rectangle().frame(width: pad, height: pad)
+                    }
+                    .foregroundStyle(.orange)
                 }
-                .foregroundStyle(.orange)
-                HStack {
-                    Rectangle().frame(width: pad, height: pad)
-                    Spacer()
-                    Rectangle().frame(width: pad, height: pad)
-                }
-                .foregroundStyle(.orange)
             }
-        }
-        .overlay(alignment: .bottomTrailing) {
-            Circle().fill(Color.orange)
-                .frame(width: pad*2)
-                .offset(x: -1, y: -1)
-        }
-//        .shadow(radius: 8)
+//            .overlay(alignment: .bottomTrailing) {
+//                Circle().fill(Color.orange)
+//                    .frame(width: pad*2)
+//                    .offset(x: -1, y: -1)
+//            }
+        //        .shadow(radius: 8)
     }
 }
 
 #Preview {
     Proportio()
         .padding()
-//        .preferredColorScheme(.light)
+    //        .preferredColorScheme(.light)
 }

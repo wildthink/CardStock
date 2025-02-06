@@ -30,13 +30,23 @@ struct TagEffect: TextRenderer {
     
   let tagBackgroundColor: Color
 
+    func sizeThatFits(proposal: ProposedViewSize, text: TextProxy) -> CGSize {
+//        let (h, w) = (proposal.height, proposal.width)
+        var size = text.sizeThatFits(proposal)
+        size.width += 0
+        return size
+    }
+    
     func draw(layout: Text.Layout, in context: inout GraphicsContext) {
     for run in layout.flattenedRuns {
       if run[TagAttribute.self] != nil {
         let rect = run.typographicBounds.rect
         let copy = context
         // Draw the tag's background
-        let shape = RoundedRectangle(cornerRadius: 5).path(in: rect)
+          var box = rect // rect.insetBy(dx: -20, dy: -20)
+//          box.size.width = 50
+//          box.size.height = 50
+        let shape = RoundedRectangle(cornerRadius: 5).path(in: box)
         copy.fill(shape, with: .color(tagBackgroundColor))
       }
       context.draw(run)
@@ -86,5 +96,6 @@ struct TagEffectDemo: View {
     tagFontColor: .white
   )
   .frame(width: 160)
+  .padding()
 }
 
