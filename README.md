@@ -58,4 +58,4 @@ supporting views.
 - [Why Cards are the Future of the Web](https://blog.intercom.io/why-cards-are-the-future-of-the-web/)
 - [Adaptive Cards](https://www.adaptivecards.io/designer/)
 
-
+https://uxdesign.cc/8-best-practices-for-ui-card-design-898f45bb60cc

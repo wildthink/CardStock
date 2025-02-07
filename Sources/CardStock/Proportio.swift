@@ -7,14 +7,25 @@
 
 import SwiftUI
 
+struct Proportio {
+    var baseCornerRadius: CGFloat = 4
+    var radiusScale: CGFloat = 2
+    
+    func cornerRadius(level: CGFloat) -> CGFloat {
+        baseCornerRadius * pow(radiusScale, level)
+    }
+    
+    func elevation(level: CGFloat) -> CGFloat {
+        baseCornerRadius * pow(radiusScale, level)
+    }
+}
+
 struct Typography {
     
     var typographyScale: FontScale = .perfectFourth
     var typographyBase: CGFloat = 12
     var typographyMaxLevel: Int = 6
     
-    var baseCornerRadius: CGFloat = 4
-    var radiusScale: CGFloat = 2
     
     // https://github.com/NateBaldwinDesign/proportio/
     enum FontScale: CGFloat, CaseIterable {
@@ -29,13 +40,6 @@ struct Typography {
         case majorSixth = 2
     }
     
-    func cornerRadius(level: CGFloat) -> CGFloat {
-        baseCornerRadius * pow(radiusScale, level)
-    }
-    
-    func elevation(level: CGFloat) -> CGFloat {
-        baseCornerRadius * pow(radiusScale, level)
-    }
     
     func padding(level: Int, base: CGFloat? = nil) -> CGPoint {
         let pt = round(fontScale(level: level, base: base)/1.333)
@@ -73,7 +77,7 @@ struct Typography {
     }
 }
 
-struct Proportio: View {
+struct ProportioView: View {
     var pad: CGFloat = 16
     
     var body: some View {
@@ -133,7 +137,7 @@ struct Proportio: View {
 }
 
 #Preview {
-    Proportio()
+    ProportioView()
         .padding()
     //        .preferredColorScheme(.light)
 }

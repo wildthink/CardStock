@@ -219,6 +219,23 @@ public struct Markdownosaur: MarkupVisitor {
     }
     
     mutating public
+    func visitBlockDirective(_ node: BlockDirective) -> RichText {
+        guard node.name.lowercased() != "comment"
+        else { return RichText() }
+
+        return RichText()
+        
+//        var label: String
+//        if !node.argumentText.isEmpty {
+//            let segs = node.argumentText.segments
+//            let args = segs.compactMap(\.trimmedText).joined(separator: " ")
+//            label = "@\(node.name)(\(args))"
+//        } else {
+//            label = "@\(node.name)"
+//        }
+    }
+
+    mutating public
     func visitInlineAttributes(_ attributes: InlineAttributes) -> RichText {
         var result = richText(for: attributes.children)
         result.mergeAttributes(design.attributes(for: attributes))
