@@ -29,16 +29,10 @@ struct ProfileView: View {
     var body: some View {
         VStack {
             ScrollView {
-//                runs()
                 ForEach(parts, id: \.offset) {
-//                    Text($0.element)
                     view($0.element)
                 }
             }
-            //                Text(mdp.attributedString(from: doc))
-            //                Divider()
-            //                Image(nsImage: ns_img)
-            //                img
             Divider()
             ScrollView {
                 Text(doc.debugDescription())
@@ -53,7 +47,7 @@ struct ProfileView: View {
     
     @ViewBuilder
     func view(_ attr: AttributedString) -> some View {
-        if let value = attr.link {
+        if attr.link != nil {
             Text(attr)
         } else if let value = attr.imageURL {
 //            Text("Image: \(value)")
@@ -69,57 +63,15 @@ struct ProfileView: View {
         return it
     }
 
-//    func runs() -> SwiftUI.Text {
-//        let str = mdp.attributedString(from: doc)
-//        var t = SwiftUI.Text("")
-//        var currentRange: Range<AttributedString.Index>? = nil
-//
-//        for run in str.runs {
-//            if let link = run.link {
-//                // If there's a current combined range, add it to the Text view before proceeding
-//                if let range = currentRange {
-//                    t = t + SwiftUI.Text(AttributedString(str[range]))
-//                    currentRange = nil
-//                }
-//
-//                print("link", link)
-//                let icon = SwiftUI.Text(Image(systemName: "globe"))
-//                let slice = str[run.range]
-//                t = t + icon + SwiftUI.Text(AttributedString(slice))
-//            } else if let img = run.imageURL {
-//                // Similarly, handle image runs by first flushing the current text range
-//                if let range = currentRange {
-//                    t = t + SwiftUI.Text(AttributedString(str[range]))
-//                    currentRange = nil
-//                }
-//
-//                print("img", img)
-//                let icon = SwiftUI.Text(Image(systemName: "photo"))
-//                t = t + icon
-//            } else {
-//                // Combine consecutive text ranges
-//                if let existingRange = currentRange {
-//                    currentRange = existingRange.lowerBound..<run.range.upperBound
-//                } else {
-//                    currentRange = run.range
-//                }
-//            }
-//        }
-//
-//        // Add any remaining combined range to the Text view
-//        if let range = currentRange {
-//            t = t + SwiftUI.Text(AttributedString(str[range]))
-//        }
-//
-//        return t
-//    }
-
     func partition() -> [AttributedString] {
         let str = mdp.attributedString(from: doc)
         var result: [AttributedString] = []
         var currentRange: Range<AttributedString.Index>? = nil
 
         for run in str.runs {
+            if let scope = run.scope {
+                print("Scope: \(scope)")
+            }
             if let link = run.link {
                 // Add the current accumulated text range to the result before handling the link
                 if let range = currentRange {
@@ -127,11 +79,7 @@ struct ProfileView: View {
                     currentRange = nil
                 }
 
-                print("link", link)
-//                let slice = str[run.range]
-//                var linkedText = AttributedString(slice)
-                // Add a globe icon prefix to linked text (optional)
-//                linkedText.insert(AttributedString(Image(systemName: "globe")), at: linkedText.startIndex)
+//                print("link", link)
                 result.append(str[run.range])
             } else if let img = run.imageURL {
                 // Add the current accumulated text range to the result before handling the image
@@ -139,15 +87,18 @@ struct ProfileView: View {
                     result.append(AttributedString(str[range]))
                     currentRange = nil
                 }
-
-                print("img", img)
+                
+                //                print("img", img)
                 result.append(str[run.range])
                 // You could optionally add an image representation here if needed
-//                let imageText = AttributedString(Image(systemName: "photo"))
-//                let slice = str[run.range]
-//                var imageText = AttributedString(slice)
-//                result.append(imageText)
+//            } else if let scope = run.scope {
+//                print("Scope: \(scope)")
+//
             } else {
+                if let sp = run.textBreak {
+                    print("Text break: \(sp)")
+                }
+                
                 // Accumulate ranges of consecutive text runs
                 if let existingRange = currentRange {
                     currentRange = existingRange.lowerBound..<run.range.upperBound
@@ -164,31 +115,6 @@ struct ProfileView: View {
 
         return result
     }
-//    func _runs() -> SwiftUI.Text {
-//        let str = mdp.attributedString(from: doc)
-//        var t = SwiftUI.Text("")
-//        
-//        print("Run count", str.runs.count)
-//        
-//        for run in str.runs {
-//            if let link = run.link {
-//                print("link", link)
-//                let icon = SwiftUI.Text(Image(systemName: "globe"))
-//                let slice = str[run.range]
-//                t = t + icon + SwiftUI.Text(AttributedString(slice))
-//            }
-//            else if let img = run.imageURL {
-//                print("img", img)
-//                let icon = SwiftUI.Text(Image(systemName: "globe"))
-//                let slice = str[run.range]
-//                t = t + icon + SwiftUI.Text(AttributedString(slice))
-//            } else {
-//                let slice = str[run.range]
-//                t = t + SwiftUI.Text(AttributedString(slice))
-//            }
-//        }
-//        return t
-//    }
 }
 
 //func foo() -> AttributedString {
@@ -227,21 +153,6 @@ func foo() -> NSAttributedString {
     // draw the result in a label
     //    yourLabel.attributedText = fullString
 }
-
-#elseif os(iOS)
-
-//import UIKit
-//
-//extension UIImage: AttributedStringConvertible {
-//    public func attributedString(environment: Environment) -> [NSAttributedString] {
-//        let attachment = NSTextAttachment()
-//        attachment.image = self
-//        return [
-//            .init(attachment: attachment)
-//        ]
-//    }
-//}
-
 #endif
 
 #Preview {
@@ -251,27 +162,36 @@ func foo() -> NSAttributedString {
 }
 
 let jason: Document = Document(parsing: """
-# Jason Jobe
-![Jason](https://wildthink.com/apps/jason/avatar.png)
+@meta {
+    baseURL: https://wildthink.com/apps/jason
+}
 
-@Caption
+# Jason Jobe
+![Jason](avatar.png)
+
+@Caption {
 - Professional iOS Application Architect
 - Amateur Social Scientist
 - Tinker, Maker, Smith
+}
 
+@links {
 - [Gravatar](https://jasonjobe.link)
 - [](https://www.linkedin.com/in/jason-jobe-bb0b991/)
 - [](https://medium.com/@jasonjobe)
 - [](https://github.com/wildthink)
 - [](https://www.instagram.com/jmj_02021/)
+}
+
+Here is where I say a little bit about myself.
+Perhaps, what I like to do for fun.
+Or anything else.
 
 @comment{ links include linkedIn, github, instagram, etc }
 @place(coordinates: []) {
 Oakland, Maryland US
 }
 
-@links {
-}
 
 """
 ,options: [.parseBlockDirectives]

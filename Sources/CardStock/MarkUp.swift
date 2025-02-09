@@ -17,12 +17,61 @@ func foo() {
     xd.addChild(pi)
 }
 
+enum TextBreak {
+    case none
+    case space
+    case soft
+    case line
+    case paragraph
+    case thematicBreak
+    case list
+    case listItem
+    case section(index: IndexPath)
+    
+    static func section(index: Int) -> TextBreak {
+        section(index: [index])
+    }
+}
+
+
+extension RichText {
+    init(_ str: String, spacing: TextBreak) {
+        self.str = AttributedString(str)
+        self.str.textBreak = spacing
+    }
+}
+
 struct StringDesign: Sendable {
 
     var typography: Typography = Typography()
     
     var plain: AttributeContainer = AttributeContainer()
 
+    func vspace(for type: TextBreak) -> RichText {
+        var rtf = switch type {
+        case .none:
+            RichText()
+        case .space:
+            RichText(" ")
+        case .soft:
+            RichText(" ")
+        case .line:
+            RichText("\n")
+        case .paragraph:
+            RichText("\n\n")
+        case .thematicBreak:
+            thematicBreak
+        case .list:
+            RichText("\n\n")
+        case .listItem:
+            RichText("\n")
+        case .section(index: _):
+            RichText("\n")
+        }
+        rtf.str.textBreak = type
+        return rtf
+    }
+    
     var thematicBreak: RichText = {
         var str = AttributedString("\n\u{00A0} \u{0009} \u{00A0}\n")
         str.underlineStyle = .double
@@ -195,23 +244,20 @@ public struct Markdownosaur: MarkupVisitor {
         return design.apply(.strong, to: &txt)
     }
     
-    var paragraphTrailingLines: String {
-        "\n\n"
-    }
-
     mutating public func visitParagraph(_ paragraph: Paragraph) -> RichText {
         var result = richText(for: paragraph.children)
         
         if paragraph.hasSuccessor {
-            result += (paragraph.isContainedInList ? "\n" :  "\n\n")
+            result += (paragraph.isContainedInList
+                       ? design.vspace(for: .listItem)
+                       : design.vspace(for: .paragraph))
         }
         
         return result
     }
     
     public func visitSoftBreak(_ softBreak: SoftBreak) -> RichText {
-        // FIXME: Check active Directive for soft-break value
-        RichText()
+        design.vspace(for: .soft)
     }
     
     mutating public func visitHeading(_ heading: Heading) -> RichText {
@@ -219,7 +265,7 @@ public struct Markdownosaur: MarkupVisitor {
         result.mergeAttributes(design.attributes(forHeading: heading))
         
         if heading.hasSuccessor {
-            result += "\n"
+            result += design.vspace(for: .section(index: heading.level))
         }
         
         return result
@@ -229,6 +275,12 @@ public struct Markdownosaur: MarkupVisitor {
     func visitBlockDirective(_ node: BlockDirective) -> RichText {
         guard node.name.lowercased() != "comment"
         else { return RichText() }
+        
+        if node.name.lowercased() == "meta" {
+            var rtf = RichText("")
+            rtf.str.scope = node.name
+            return rtf
+        }
 
         return richText(for: node.children)
 
@@ -293,7 +345,7 @@ public struct Markdownosaur: MarkupVisitor {
         var result = design.attributed(code: codeBlock.code, language: codeBlock.language)
 
         if codeBlock.hasSuccessor {
-            result += "\n"
+            result += design.vspace(for: .paragraph)
         }
     
         return result
@@ -335,7 +387,7 @@ public struct Markdownosaur: MarkupVisitor {
             result.append(visit(item))
         }
         if list.hasSuccessor {
-            result += "\n"
+            result += design.vspace(for: .list)
         }
         result.paragraphStyle = paragraphStyle(for: list)
         return result
@@ -349,7 +401,7 @@ public struct Markdownosaur: MarkupVisitor {
         for child in listItem.children {
             result.append(visit(child))
             if first {
-                result += "\n"
+                result += design.vspace(for: .listItem)
                 first = false
             }
         }
@@ -358,7 +410,7 @@ public struct Markdownosaur: MarkupVisitor {
 
     mutating public
     func visitThematicBreak(_ thematicBreak: ThematicBreak) -> RichText {
-        return design.thematicBreak
+        return design.vspace(for: .thematicBreak)
     }
     
     func paragraphStyle(for list: ListItemContainer) -> NSParagraphStyle {
@@ -380,11 +432,11 @@ public struct Markdownosaur: MarkupVisitor {
         var result = RichText()
         
         for child in blockQuote.children {
-            result += "\t"
+            result += design.vspace(for: .line)
             result.append(visit(child))
         }
         if blockQuote.hasSuccessor {
-            result += "\n"
+            result += design.vspace(for: .line)
         }
         let ps = NSMutableParagraphStyle()
         
@@ -407,14 +459,59 @@ public struct Markdownosaur: MarkupVisitor {
  using them with Markdown.
  */
 
-struct CustomAttributes: AttributeScope {
-    var outlineColor: OutlineColorAttribute
+extension TextBreak: Hashable, AttributedStringKey {
+    typealias Value = TextBreak
+    static var name: String { "TextBreak" }
 }
 
-enum OutlineColorAttribute : AttributedStringKey {
-    typealias Value = Color
-    static let name = "OutlineColor"
+enum RichTextScope: Hashable, AttributedStringKey {
+    typealias Value = String
+    static var name: String { "RichTextScope" }
 }
+
+extension AttributeScopes {
+    struct RichTextAttributes: AttributeScope {
+        var textBreak: TextBreak
+        var scope: RichTextScope
+    }
+    
+    var richText: RichTextAttributes.Type { RichTextAttributes.self }
+}
+
+extension AttributeDynamicLookup {
+    subscript<T: AttributedStringKey>(dynamicMember keyPath: KeyPath<AttributeScopes.RichTextAttributes, T>) -> T {
+        return self[T.self]
+    }
+}
+
+// MARK: Example
+enum SwapAttribute : AttributedStringKey {
+    typealias Value = String
+    static let name = "swap"
+}
+
+extension AttributeScopes {
+    struct MyTextStyleAttributes: AttributeScope {
+        let swap: SwapAttribute
+    }
+}
+
+extension AttributeDynamicLookup {
+    subscript<T: AttributedStringKey>(dynamicMember keyPath: KeyPath<AttributeScopes.MyTextStyleAttributes, T>) -> T {
+        return self[T.self]
+    }
+}
+
+//enum OutlineColorAttribute : AttributedStringKey {
+//    typealias Value = Color
+//    static let name = String(describing: Self.self)
+//}
+
+//struct RichTextKey<T: Hashable>: AttributedStringKey {
+//    typealias Value = T
+//    static var name: String { "RichTextKey" }
+//}
+
 
 //extension RichText.Key {
 //    static let listDepth = RichText.Key("ListDepth")
@@ -450,23 +547,6 @@ extension Markup {
     var isContainedInList: Bool {
         (parent is ListItemContainer) || (parent?.isContainedInList ?? false)
     }
-//        switch self.parent {
-//        case is ListItemContainer: true
-//        case .some(let p): p.isContainedInList
-//        default: false
-//        }
-//        var currentElement = parent
-//
-//        while currentElement != nil {
-//            if currentElement is ListItemContainer {
-//                return true
-//            }
-//
-//            currentElement = currentElement?.parent
-//        }
-//        
-//        return false
-//    }
 }
 
 //public extension String {

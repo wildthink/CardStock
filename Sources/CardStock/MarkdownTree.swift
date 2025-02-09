@@ -13,7 +13,6 @@ public struct MarkdownTree {
     var tree: XMLDocument
 }
 
-
 enum NodeType {
     case section
     case directive
