@@ -50,16 +50,33 @@ final class carbonTests: XCTestCase {
 }
 
 @preconcurrency import Markdown
-let profileDoc: Document = Document(parsing: """
+let profileDoc: Document = Document(parsing: md, options: [.parseBlockDirectives])
+
+let md = """
 # Jason Jobe
-### Tinker, Maker, Smith
+![Jason](https://wildthink.com/apps/jason/avatar.png)
 
-^[email](mailto:box@example.com)
+@lede {
+Professional iOS Application Architect
+Amateur Social Scientist
+Tinker, Maker, Smith
+}
 
-""",
-options: [.parseBlockDirectives]
-)
+@comment{ links include linkedIn, github, instagram, etc }
+@place() {
+Oakland, Maryland US
+}
 
+@links {
+    [Gravatar](https://jasonjobe.link)
+    [l](https://www.linkedin.com/in/jason-jobe-bb0b991/)
+    [m](https://medium.com/@jasonjobe)
+    [g](https://github.com/wildthink)
+    [i](https://www.instagram.com/jmj_02021/)
+}
+
+"""
+        
 func pr<T,V>(_ t: T, _ k: KeyPath<T,V>, line: Int = #line) {
     let value = t[keyPath: k]
     print("  ", String(describing: k), String(describing: value))
