@@ -11,6 +11,12 @@ import Foundation
 import SwiftUI
 import Markdown
 
+func foo() {
+    let xd = XMLDocument()
+    let pi = XMLElement(kind: .processingInstruction)
+    xd.addChild(pi)
+}
+
 struct StringDesign: Sendable {
 
     var typography: Typography = Typography()
@@ -108,6 +114,7 @@ public protocol UIElement {}
 @dynamicMemberLookup
 public struct RichText: Sendable {
     var str: AttributedString
+    var isEmpty: Bool { str.characters.isEmpty }
     
     init(_ str: AttributedString) {
         self.str = str
@@ -223,8 +230,8 @@ public struct Markdownosaur: MarkupVisitor {
         guard node.name.lowercased() != "comment"
         else { return RichText() }
 
-        return RichText()
-        
+        return richText(for: node.children)
+
 //        var label: String
 //        if !node.argumentText.isEmpty {
 //            let segs = node.argumentText.segments
@@ -246,6 +253,12 @@ public struct Markdownosaur: MarkupVisitor {
         var result = richText(for: link.children)
 
         let url = link.destination != nil ? URL(string: link.destination!) : nil
+        
+        if result.isEmpty, let url {
+            result = RichText(url.host ?? url.absoluteString)
+        }
+        
+        if result.isEmpty { return result }
         
         result.link = url
         result.foregroundColor = .purple
@@ -386,43 +399,21 @@ public struct Markdownosaur: MarkupVisitor {
 }
 
 // MARK: - Extensions Land
+/*
+ By declaring new attributes that conform to MarkdownDecodableAttributedStringKey,
+ you can add attributes that you invoke by using Apple’s Markdown extension
+ syntax: ^[text](name:value, name:value, …). See the sample code project Building
+ a Localized Food-Ordering App for an example of creating custom attributes and
+ using them with Markdown.
+ */
 
-extension ListItemContainer {
-    /// Depth of the list if nested within others. Index starts at 0.
-    var listDepth: Int {
-        var index = 0
-
-        var currentElement = parent
-
-        while currentElement != nil {
-            if currentElement is ListItemContainer {
-                index += 1
-            }
-
-            currentElement = currentElement?.parent
-        }
-        
-        return index
-    }
+struct CustomAttributes: AttributeScope {
+    var outlineColor: OutlineColorAttribute
 }
 
-extension BlockQuote {
-    /// Depth of the quote if nested within others. Index starts at 0.
-    var quoteDepth: Int {
-        var index = 0
-
-        var currentElement = parent
-
-        while currentElement != nil {
-            if currentElement is BlockQuote {
-                index += 1
-            }
-
-            currentElement = currentElement?.parent
-        }
-        
-        return index
-    }
+enum OutlineColorAttribute : AttributedStringKey {
+    typealias Value = Color
+    static let name = "OutlineColor"
 }
 
 //extension RichText.Key {
@@ -441,6 +432,15 @@ extension BlockQuote {
 //}
 
 extension Markup {
+    var listDepth: Int {
+        (parent is ListItemContainer ? 1:0) + (parent?.listDepth ?? 0)
+    }
+    
+    /// Depth of the quote if nested within others. Index starts at 0.
+    var quoteDepth: Int {
+        (parent is BlockQuote ? 1:0) + (parent?.quoteDepth ?? 0)
+    }
+    
     /// Returns true if this element has sibling elements after it.
     var hasSuccessor: Bool {
         guard let childCount = parent?.childCount else { return false }
@@ -448,24 +448,31 @@ extension Markup {
     }
     
     var isContainedInList: Bool {
-        var currentElement = parent
-
-        while currentElement != nil {
-            if currentElement is ListItemContainer {
-                return true
-            }
-
-            currentElement = currentElement?.parent
-        }
-        
-        return false
+        (parent is ListItemContainer) || (parent?.isContainedInList ?? false)
     }
+//        switch self.parent {
+//        case is ListItemContainer: true
+//        case .some(let p): p.isContainedInList
+//        default: false
+//        }
+//        var currentElement = parent
+//
+//        while currentElement != nil {
+//            if currentElement is ListItemContainer {
+//                return true
+//            }
+//
+//            currentElement = currentElement?.parent
+//        }
+//        
+//        return false
+//    }
 }
 
-public extension String {
-    /// Native Support for styling Markdown is limited. This is just a stub to
-    /// hook into later.
-    func markdown() -> AttributedString {
-        (try? AttributedString(markdown: self)) ?? AttributedString(self)
-    }
-}
+//public extension String {
+//    /// Native Support for styling Markdown is limited. This is just a stub to
+//    /// hook into later.
+//    func markdown() -> AttributedString {
+//        (try? AttributedString(markdown: self)) ?? AttributedString(self)
+//    }
+//}
