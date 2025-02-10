@@ -36,9 +36,11 @@ extension RichText {
 }
 
 struct StringDesign: Sendable {
+    enum Style { case emphasis, strong, strikethrough, code }
 
     var typography: Typography = Typography()
     var plain: AttributeContainer = AttributeContainer()
+    var baseFontSize: CGFloat = 14
 
     // FIXME: Change to use NSParagraph spacing
     func vspace(for type: TextBreak) -> RichText {
@@ -117,10 +119,7 @@ struct StringDesign: Sendable {
         container.font = .systemFont(ofSize: typography.fontSize(forHeading: heading.level))
         return container
     }
-    
-    enum Style { case emphasis, strong, strikethrough, code }
-    var baseFontSize: CGFloat = 14
-    
+        
     func attributed(code: String, language: String? = nil) -> RichText {
         var txt = RichText(code)
         return if language != nil {
@@ -228,10 +227,12 @@ public struct Markdownosaur: MarkupVisitor {
 //    public typealias Result = UIElement
     
 //    let baseFontSize: CGFloat = 15.0
-    let design = StringDesign()
+    var design: StringDesign
     var metadata: [String: Any] = [:]
     
-    public init() {}
+    public init(baseSize: CGFloat = 14) {
+        design = StringDesign(baseFontSize: baseSize)
+    }
     
     public mutating func attributedString(from document: Document) -> AttributedString {
         return visit(document).str

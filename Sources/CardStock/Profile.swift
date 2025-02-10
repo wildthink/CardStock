@@ -22,7 +22,7 @@ extension [AttributedString] {
 
 struct ProfileView: View {
     var doc: Document = jason
-    @State var mdp = Markdownosaur()
+    @State var mdp = Markdownosaur(baseSize: 8)
     let img = Image(systemName: "message.badge.filled.fill")
     let ns_img = NSImage(systemSymbolName: "message.badge.filled.fill", accessibilityDescription: nil)!
     
