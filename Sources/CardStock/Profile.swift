@@ -29,8 +29,10 @@ struct ProfileView: View {
     var body: some View {
         VStack {
             ScrollView {
-                ForEach(parts, id: \.offset) {
-                    view($0.element)
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(parts, id: \.offset) {
+                        view($0.element)
+                    }
                 }
             }
             Divider()
@@ -49,6 +51,7 @@ struct ProfileView: View {
     func view(_ attr: AttributedString) -> some View {
         if attr.link != nil {
             Text(attr)
+                .border(.red)
         } else if let value = attr.imageURL {
 //            Text("Image: \(value)")
             AsyncImage(url: value)
@@ -65,13 +68,23 @@ struct ProfileView: View {
 
     func partition() -> [AttributedString] {
         let str = mdp.attributedString(from: doc)
+//        var new = str
+        let nl = AttributedString("\n")
+        for run in str.runs[\.link] {
+//            new.insert(nl, at: run.1.upperBound)
+        }
+        return [str]
+    }
+    
+    func _partition() -> [AttributedString] {
+        let str = mdp.attributedString(from: doc)
         var result: [AttributedString] = []
         var currentRange: Range<AttributedString.Index>? = nil
 
         for run in str.runs {
-            if let scope = run.scope {
-                print("Scope: \(scope)")
-            }
+//            if let scope = run.scope {
+//                print("Scope: \(scope)")
+//            }
             if let link = run.link {
                 // Add the current accumulated text range to the result before handling the link
                 if let range = currentRange {
@@ -124,40 +137,9 @@ struct ProfileView: View {
 //    return AttributedString(NSAttributedString(attachment: attachment))
 //}
 
-#if os(macOS)
-import Cocoa
-
-extension NSImage {
-    public func attributedString() -> NSAttributedString {
-        let attachment = ImageAttachment()
-        attachment.image = self
-        return .init(attachment: attachment)
-    }
-}
-
-func foo() -> NSAttributedString {
-    let fullString = NSMutableAttributedString(string: "Start of text")
-    
-    // create our NSTextAttachment
-    let image1Attachment = NSTextAttachment()
-    image1Attachment.image = NSImage(systemSymbolName: "star", accessibilityDescription: nil)
-    //    image1Attachment.image = UIImage(named: "awesomeIcon.png")
-    
-    // wrap the attachment in its own attributed string so we can append it
-    let image1String = NSAttributedString(attachment: image1Attachment)
-    
-    // add the NSTextAttachment wrapper to our full string, then add some more text.
-    fullString.append(image1String)
-    fullString.append(NSAttributedString(string: "End of text"))
-    return fullString
-    // draw the result in a label
-    //    yourLabel.attributedText = fullString
-}
-#endif
-
 #Preview {
     ProfileView()
-        .frame(height: 500)
+        .frame(width: 400, height: 500)
         .padding()
 }
 
@@ -169,19 +151,22 @@ let jason: Document = Document(parsing: """
 # Jason Jobe
 ![Jason](avatar.png)
 
+line\\
+break
+
 @Caption {
 - Professional iOS Application Architect
 - Amateur Social Scientist
 - Tinker, Maker, Smith
+    - inner
+    - two
 }
 
-@links {
-- [Gravatar](https://jasonjobe.link)
-- [](https://www.linkedin.com/in/jason-jobe-bb0b991/)
-- [](https://medium.com/@jasonjobe)
-- [](https://github.com/wildthink)
-- [](https://www.instagram.com/jmj_02021/)
-}
+[Gravatar](https://jasonjobe.link)\\
+[](https://www.linkedin.com/in/jason-jobe-bb0b991/)
+[](https://medium.com/@jasonjobe)
+[](https://github.com/wildthink)
+[](https://www.instagram.com/jmj_02021/)
 
 Here is where I say a little bit about myself.
 Perhaps, what I like to do for fun.
@@ -237,3 +222,36 @@ line 3
 """,
 options: [.parseBlockDirectives]
 )
+
+// MARK: Misc
+#if os(macOS)
+import Cocoa
+
+extension NSImage {
+    public func attributedString() -> NSAttributedString {
+        let attachment = ImageAttachment()
+        attachment.image = self
+        return .init(attachment: attachment)
+    }
+}
+
+func foo() -> NSAttributedString {
+    let fullString = NSMutableAttributedString(string: "Start of text")
+    
+    // create our NSTextAttachment
+    let image1Attachment = NSTextAttachment()
+    image1Attachment.image = NSImage(systemSymbolName: "star", accessibilityDescription: nil)
+    //    image1Attachment.image = UIImage(named: "awesomeIcon.png")
+    
+    // wrap the attachment in its own attributed string so we can append it
+    let image1String = NSAttributedString(attachment: image1Attachment)
+    
+    // add the NSTextAttachment wrapper to our full string, then add some more text.
+    fullString.append(image1String)
+    fullString.append(NSAttributedString(string: "End of text"))
+    return fullString
+    // draw the result in a label
+    //    yourLabel.attributedText = fullString
+}
+#endif
+

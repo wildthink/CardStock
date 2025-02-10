@@ -11,12 +11,6 @@ import Foundation
 import SwiftUI
 import Markdown
 
-func foo() {
-    let xd = XMLDocument()
-    let pi = XMLElement(kind: .processingInstruction)
-    xd.addChild(pi)
-}
-
 enum TextBreak {
     case none
     case space
@@ -44,9 +38,9 @@ extension RichText {
 struct StringDesign: Sendable {
 
     var typography: Typography = Typography()
-    
     var plain: AttributeContainer = AttributeContainer()
 
+    // FIXME: Change to use NSParagraph spacing
     func vspace(for type: TextBreak) -> RichText {
         var rtf = switch type {
         case .none:
@@ -58,11 +52,11 @@ struct StringDesign: Sendable {
         case .line:
             RichText("\n")
         case .paragraph:
-            RichText("\n\n")
+            RichText("\n")
         case .thematicBreak:
             thematicBreak
         case .list:
-            RichText("\n\n")
+            RichText("\n")
         case .listItem:
             RichText("\n")
         case .section(index: _):
@@ -73,6 +67,7 @@ struct StringDesign: Sendable {
     }
     
     var thematicBreak: RichText = {
+        // FIXME: Change to use NSParagraph spacing
         var str = AttributedString("\n\u{00A0} \u{0009} \u{00A0}\n")
         str.underlineStyle = .double
         str.underlineColor = .gray
@@ -80,6 +75,29 @@ struct StringDesign: Sendable {
         return RichText(str)
     }()
 
+    func paragraphStyle(for list: ListItemContainer) -> NSParagraphStyle {
+        let style = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
+        style.headIndent = 0
+        
+        style.tabStops[0] = NSTextTab(textAlignment: .right, location: style.tabStops[0].location)
+        style.tabStops[1] = NSTextTab(textAlignment: .left, location: style.tabStops[0].location + 10)
+        style.headIndent += style.tabStops[1].location
+        style.paragraphSpacing = 0 // Remove spacing between list items
+//        style.lineSpacing
+        return style
+    }
+
+    func paragraphStyle(for blockQuote: BlockQuote) -> NSParagraphStyle {
+        let ps = NSMutableParagraphStyle()
+        
+        let baseLeftMargin: CGFloat = 15.0
+        let leftMarginOffset = baseLeftMargin + (20.0 * CGFloat(blockQuote.quoteDepth))
+        
+        ps.tabStops = [NSTextTab(textAlignment: .left, location: leftMarginOffset)]
+        ps.headIndent = leftMarginOffset
+        return ps
+    }
+    
     func attributes(for node: InlineAttributes) -> AttributeContainer {
         // FIXME: Check for URL's vs other parameters (eg style)
         var container = AttributeContainer()
@@ -100,7 +118,7 @@ struct StringDesign: Sendable {
         return container
     }
     
-    enum Style { case emphasis, strong, code }
+    enum Style { case emphasis, strong, strikethrough, code }
     var baseFontSize: CGFloat = 14
     
     func attributed(code: String, language: String? = nil) -> RichText {
@@ -124,6 +142,9 @@ struct StringDesign: Sendable {
             txt.underlineStyle = .single
         case .strong:
             txt.underlineStyle = .double
+        case .strikethrough:
+            txt.strikethroughStyle = .single
+            txt.strikethroughColor = .controlAccentColor
         case .code:
             txt.foregroundColor = .systemGray
             txt.font = .monospacedSystemFont(ofSize: baseFontSize, weight: .regular)
@@ -169,23 +190,24 @@ public struct RichText: Sendable {
         self.str = str
     }
     
-    init(_ str: String = "") {
+    init(_ str: String = "", with attributes: AttributeContainer? = nil) {
         self.str = AttributedString(str)
+        if let attributes {
+            self.str.setAttributes(attributes)
+        }
     }
 
     mutating func append(_ other: RichText) {
-        str += other.str
+        str.append(other.str)
     }
     mutating func append(_ other: AttributedString) {
-        str += other
-    }
-
-    mutating func setAttributes(_ ac: AttributeContainer) {
-        str.setAttributes(ac)
+        str.append(other)
     }
     
-    mutating func mergeAttributes(_ ac: AttributeContainer) {
+    @discardableResult
+    mutating func mergeAttributes(_ ac: AttributeContainer) -> RichText {
         str.mergeAttributes(ac)
+        return self
     }
 
     static func +=(lhs: inout RichText, rhs: RichText) {
@@ -205,8 +227,9 @@ public struct RichText: Sendable {
 public struct Markdownosaur: MarkupVisitor {
 //    public typealias Result = UIElement
     
-    let baseFontSize: CGFloat = 15.0
+//    let baseFontSize: CGFloat = 15.0
     let design = StringDesign()
+    var metadata: [String: Any] = [:]
     
     public init() {}
     
@@ -219,19 +242,20 @@ public struct Markdownosaur: MarkupVisitor {
     }
     
     mutating public
-    func richText(for children: MarkupChildren) -> RichText {
+    func richText(for children: MarkupChildren, seperator: RichText? = nil) -> RichText {
         var result = RichText()
         
         for child in children {
             result.append(visit(child))
+            if let seperator {
+                result.append(seperator)
+            }
         }
         return result
     }
     
     mutating public func visitText(_ text: Markdown.Text) -> RichText {
-        var txt = RichText(text.plainText)
-        txt.setAttributes(design.plain)
-        return txt
+        RichText(text.plainText, with: design.plain)
     }
     
     mutating public func visitEmphasis(_ emphasis: Emphasis) -> RichText {
@@ -256,10 +280,19 @@ public struct Markdownosaur: MarkupVisitor {
         return result
     }
     
+    // MARK: Markdown Line Breaks
     public func visitSoftBreak(_ softBreak: SoftBreak) -> RichText {
         design.vspace(for: .soft)
     }
     
+    public func visitLineBreak(_ lineBreak: LineBreak) -> RichText {
+        return design.vspace(for: .line)
+    }
+
+    public func visitThematicBreak(_ thematicBreak: ThematicBreak) -> RichText {
+        return design.vspace(for: .thematicBreak)
+    }
+
     mutating public func visitHeading(_ heading: Heading) -> RichText {
         var result = richText(for: heading.children)
         result.mergeAttributes(design.attributes(forHeading: heading))
@@ -313,8 +346,7 @@ public struct Markdownosaur: MarkupVisitor {
         if result.isEmpty { return result }
         
         result.link = url
-        result.foregroundColor = .purple
-//        result.applyLink(withURL: url)
+//        result.foregroundColor = .purple
         
         return result
     }
@@ -330,31 +362,22 @@ public struct Markdownosaur: MarkupVisitor {
         if let src = image.source, let url = URL(string: src) {
             result.imageURL = url
         }
+        result.custom = "image"
         return result
     }
-
+        
+    // MARK: Inline Markup
     public mutating func visitInlineHTML(_ inlineHTML: InlineHTML) -> RichText {
         RichText(inlineHTML.rawHTML)
     }
-
+    
     mutating public func visitInlineCode(_ inlineCode: InlineCode) -> RichText {
         design.attributedString(for: inlineCode.code, style: .code)
     }
-    
-    public func visitCodeBlock(_ codeBlock: CodeBlock) -> RichText {
-        var result = design.attributed(code: codeBlock.code, language: codeBlock.language)
 
-        if codeBlock.hasSuccessor {
-            result += design.vspace(for: .paragraph)
-        }
-    
-        return result
-    }
-    
     mutating public func visitStrikethrough(_ strikethrough: Strikethrough) -> RichText {
         var result = richText(for: strikethrough.children)
-        result.strikethroughStyle = .single
-        return result
+        return design.apply(.strikethrough, to: &result)
     }
     
     // MARK: List Support
@@ -383,69 +406,50 @@ public struct Markdownosaur: MarkupVisitor {
                 default:
                 "•"  // TODO: design.bullet
             }
-            result.append(AttributedString("\t\(prefix) "))
+            let indent = String(repeating: "\t", count: item.listDepth)
+            result.append(AttributedString("\(indent)\(prefix) "))
             result.append(visit(item))
+            result += design.vspace(for: .listItem)
         }
-        if list.hasSuccessor {
-            result += design.vspace(for: .list)
-        }
-        result.paragraphStyle = paragraphStyle(for: list)
+        result.paragraphStyle = design.paragraphStyle(for: list)
+//        if list.hasSuccessor {
+//        result += design.vspace(for: .paragraph)
+//        }
         return result
     }
     
     mutating public
     func visitListItem(_ listItem: ListItem) -> RichText {
-        var first = true
-        var result = RichText()
+        richText(for: listItem.children)
+//        var result = RichText()
+//        
+//        for child in listItem.children {
+//            result.append(visit(child))
+//        }
+//        return result
+    }
+    
+    public func visitCodeBlock(_ codeBlock: CodeBlock) -> RichText {
+        var result = design.attributed(code: codeBlock.code, language: codeBlock.language)
         
-        for child in listItem.children {
-            result.append(visit(child))
-            if first {
-                result += design.vspace(for: .listItem)
-                first = false
-            }
+        if codeBlock.hasSuccessor {
+            result += design.vspace(for: .paragraph)
         }
+        
         return result
-    }
-
-    mutating public
-    func visitThematicBreak(_ thematicBreak: ThematicBreak) -> RichText {
-        return design.vspace(for: .thematicBreak)
-    }
-    
-    func paragraphStyle(for list: ListItemContainer) -> NSParagraphStyle {
-        let style = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
-        style.headIndent = 0
-//        return style
-    
-        style.tabStops[0] = NSTextTab(textAlignment: .right, location: style.tabStops[0].location)
-        style.tabStops[1] = NSTextTab(textAlignment: .left, location: style.tabStops[0].location + 10)
-        style.headIndent += style.tabStops[1].location
-        style.paragraphSpacing = 0 // Remove spacing between list items
-        return style
-//        var textstyle = AttributeContainer()
-//        textstyle.paragraphStyle = style
-//        return textstyle
     }
 
     mutating public func visitBlockQuote(_ blockQuote: BlockQuote) -> RichText {
         var result = RichText()
         
         for child in blockQuote.children {
-            result += design.vspace(for: .line)
+            result.append(design.vspace(for: .line))
             result.append(visit(child))
         }
         if blockQuote.hasSuccessor {
             result += design.vspace(for: .line)
         }
-        let ps = NSMutableParagraphStyle()
-        
-        let baseLeftMargin: CGFloat = 15.0
-        let leftMarginOffset = baseLeftMargin + (20.0 * CGFloat(blockQuote.quoteDepth))
-        
-        ps.tabStops = [NSTextTab(textAlignment: .left, location: leftMarginOffset)]
-        ps.headIndent = leftMarginOffset
-        result.paragraphStyle = ps
+        result.paragraphStyle = design.paragraphStyle(for: blockQuote)
         return result
     }
 }
@@ -469,10 +473,16 @@ enum RichTextScope: Hashable, AttributedStringKey {
     static var name: String { "RichTextScope" }
 }
 
+enum RichTextCustom: Hashable, AttributedStringKey {
+    typealias Value = String
+    static var name: String { "RichTextCustom" }
+}
+
 extension AttributeScopes {
     struct RichTextAttributes: AttributeScope {
         var textBreak: TextBreak
         var scope: RichTextScope
+        var custom: RichTextCustom
     }
     
     var richText: RichTextAttributes.Type { RichTextAttributes.self }
@@ -502,32 +512,6 @@ extension AttributeDynamicLookup {
     }
 }
 
-//enum OutlineColorAttribute : AttributedStringKey {
-//    typealias Value = Color
-//    static let name = String(describing: Self.self)
-//}
-
-//struct RichTextKey<T: Hashable>: AttributedStringKey {
-//    typealias Value = T
-//    static var name: String { "RichTextKey" }
-//}
-
-
-//extension RichText.Key {
-//    static let listDepth = RichText.Key("ListDepth")
-//    static let quoteDepth = RichText.Key("QuoteDepth")
-//}
-//
-//extension NSMutableAttributedString {
-//    func addAttribute(_ name: RichText.Key, value: Any) {
-//        addAttribute(name, value: value, range: NSRange(location: 0, length: length))
-//    }
-//    
-//    func addAttributes(_ attrs: [RichText.Key : Any]) {
-//        addAttributes(attrs, range: NSRange(location: 0, length: length))
-//    }
-//}
-
 extension Markup {
     var listDepth: Int {
         (parent is ListItemContainer ? 1:0) + (parent?.listDepth ?? 0)
@@ -548,11 +532,3 @@ extension Markup {
         (parent is ListItemContainer) || (parent?.isContainedInList ?? false)
     }
 }
-
-//public extension String {
-//    /// Native Support for styling Markdown is limited. This is just a stub to
-//    /// hook into later.
-//    func markdown() -> AttributedString {
-//        (try? AttributedString(markdown: self)) ?? AttributedString(self)
-//    }
-//}
