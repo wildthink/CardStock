@@ -59,3 +59,7 @@ supporting views.
 - [Adaptive Cards](https://www.adaptivecards.io/designer/)
 
 https://uxdesign.cc/8-best-practices-for-ui-card-design-898f45bb60cc
+
+AttributedString: Making Text More Beautiful Than Ever
+https://fatbobman.com/en/posts/attributedstring/
+

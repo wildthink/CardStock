@@ -8,6 +8,72 @@
 import SwiftUI
 @preconcurrency import Markdown
 
+/*
+ message (Apple)
+ bubble
+ envelope emailto:jane@jetsons.com
+ phone tel:199999
+ globe https: http:
+ mappin.and.ellipse 􀎫 geo:25.245470,51.454009
+ */
+
+struct xLink: Identifiable {
+    var id: Int { url.absoluteString.hashValue }
+    var label: String
+    var url: URL
+    var customIcon: SwiftUI.Image?
+    
+    var icon: SwiftUI.Image {
+        customIcon ??
+            .init(systemName: commonFavicon ?? defaultIcon)
+    }
+}
+
+extension xLink {
+    var defaultIcon: String {
+        switch url.scheme {
+            case "https", "http": "globe"
+        case "tel": "phone"
+        case "geo": "mappin.and.ellipse"
+        case "sms": "bubble"
+            case "mailto": "envelope"
+        default:
+            "link"
+        }
+    }
+    
+    var commonFavicon: String? {
+        switch url.host {
+        case "apple.com":
+            "apple.logo"
+        default:
+             nil
+        }
+    }
+}
+
+struct LinkView: View {
+    enum Style { case iconOnly, iconAndLabel, labelOnly }
+    var model: xLink
+    var style: Style = .iconAndLabel
+    
+    var body: some View {
+        switch style {
+            case .iconOnly:
+            model.icon.resizable()
+                .frame(width: 16, height: 16)
+        case .iconAndLabel:
+            HStack(alignment: .center) {
+                model.icon.resizable()
+                    .frame(width: 16, height: 16)
+                Text(model.label)
+            }
+        case .labelOnly:
+            Text(model.label)
+        }
+    }
+}
+
 struct xText: View {
     var body: some View {
         Text("")
@@ -21,8 +87,8 @@ extension [AttributedString] {
 }
 
 struct ProfileView: View {
-    var doc: Document = jason
-    @State var mdp = Markdownosaur(baseSize: 8)
+    var doc: XtDocument = jason
+//    @State var mdp = Markdownosaur(baseSize: 8)
     let img = Image(systemName: "message.badge.filled.fill")
     let ns_img = NSImage(systemSymbolName: "message.badge.filled.fill", accessibilityDescription: nil)!
     
@@ -33,13 +99,16 @@ struct ProfileView: View {
                     ForEach(parts, id: \.offset) {
                         view($0.element)
                     }
+                    ForEach(doc.links) {
+                        LinkView(model: $0)
+                    }
                 }
             }
-            Divider()
-            ScrollView {
-                Text(doc.debugDescription())
-            }
-            //            }
+//            Divider()
+//            ScrollView {
+//                Text(doc.debugDescription())
+//            }
+//                        }
         }
         .environment(\.openURL, OpenURLAction(handler: { url in
             print("Tap on URL: \(url)")
@@ -52,9 +121,18 @@ struct ProfileView: View {
         if attr.link != nil {
             Text(attr)
                 .border(.red)
-        } else if let value = attr.imageURL {
+        } else if let url = attr.imageURL {
 //            Text("Image: \(value)")
-            AsyncImage(url: value)
+            AsyncImage(url: url) { image in
+                   image
+                       .resizable()
+                       .scaledToFill()
+               } placeholder: {
+                   ProgressView()
+               }
+//               .frame(width: 44, height: 44)
+               .background(Color.gray)
+               .clipShape(Circle())
         } else {
             Text(attr)
         }
@@ -62,72 +140,73 @@ struct ProfileView: View {
     
     var parts: [(offset: Int, element: AttributedString)] {
         let it = Array(partition().enumerated())
-        print("count:", it.count)
         return it
     }
 
     func partition() -> [AttributedString] {
-        let str = mdp.attributedString(from: doc)
+//        let str = mdp.attributedString(from: doc)
+        let str = doc.attributedString()
 //        var new = str
-        let nl = AttributedString("\n")
-        for run in str.runs[\.link] {
-//            new.insert(nl, at: run.1.upperBound)
+//        let nl = AttributedString("\n")
+        var parts: [AttributedString] = []
+        for (link, range) in str.runs[\.imageURL] {
+            parts.append(str[range])
         }
-        return [str]
+        return parts
     }
     
-    func _partition() -> [AttributedString] {
-        let str = mdp.attributedString(from: doc)
-        var result: [AttributedString] = []
-        var currentRange: Range<AttributedString.Index>? = nil
-
-        for run in str.runs {
-//            if let scope = run.scope {
-//                print("Scope: \(scope)")
-//            }
-            if let link = run.link {
-                // Add the current accumulated text range to the result before handling the link
-                if let range = currentRange {
-                    result.append(AttributedString(str[range]))
-                    currentRange = nil
-                }
-
-//                print("link", link)
-                result.append(str[run.range])
-            } else if let img = run.imageURL {
-                // Add the current accumulated text range to the result before handling the image
-                if let range = currentRange {
-                    result.append(AttributedString(str[range]))
-                    currentRange = nil
-                }
-                
-                //                print("img", img)
-                result.append(str[run.range])
-                // You could optionally add an image representation here if needed
-//            } else if let scope = run.scope {
-//                print("Scope: \(scope)")
+//    func _partition() -> [AttributedString] {
+//        let str = mdp.attributedString(from: doc)
+//        var result: [AttributedString] = []
+//        var currentRange: Range<AttributedString.Index>? = nil
 //
-            } else {
-                if let sp = run.textBreak {
-                    print("Text break: \(sp)")
-                }
-                
-                // Accumulate ranges of consecutive text runs
-                if let existingRange = currentRange {
-                    currentRange = existingRange.lowerBound..<run.range.upperBound
-                } else {
-                    currentRange = run.range
-                }
-            }
-        }
-
-        // Add any remaining accumulated text to the result
-        if let range = currentRange {
-            result.append(AttributedString(str[range]))
-        }
-
-        return result
-    }
+//        for run in str.runs {
+////            if let scope = run.scope {
+////                print("Scope: \(scope)")
+////            }
+//            if let link = run.link {
+//                // Add the current accumulated text range to the result before handling the link
+//                if let range = currentRange {
+//                    result.append(AttributedString(str[range]))
+//                    currentRange = nil
+//                }
+//
+////                print("link", link)
+//                result.append(str[run.range])
+//            } else if let img = run.imageURL {
+//                // Add the current accumulated text range to the result before handling the image
+//                if let range = currentRange {
+//                    result.append(AttributedString(str[range]))
+//                    currentRange = nil
+//                }
+//                
+//                print("img", img)
+//                result.append(str[run.range])
+//                // You could optionally add an image representation here if needed
+////            } else if let scope = run.scope {
+////                print("Scope: \(scope)")
+////
+//            } else {
+//                if let sp = run.textBreak {
+//                    print("Text break: \(sp)")
+//                }
+//                
+//                // Accumulate ranges of consecutive text runs
+//                if let existingRange = currentRange {
+//                    currentRange = existingRange.lowerBound..<run.range.upperBound
+//                } else {
+//                    currentRange = run.range
+//                }
+//            }
+//        }
+//
+//        // Add any remaining accumulated text to the result
+//        if let range = currentRange {
+//            result.append(AttributedString(str[range]))
+//        }
+//
+//        return result
+//    }
 }
 
 //func foo() -> AttributedString {
@@ -143,44 +222,44 @@ struct ProfileView: View {
         .padding()
 }
 
-let jason: Document = Document(parsing: """
+let jason = XtDocument(jason_md)
+
+//let jason: Document = Document(parsing: jason_md,options: [.parseBlockDirectives])
+
+let jason_md = """
 @meta {
     baseURL: https://wildthink.com/apps/jason
 }
 
 # Jason Jobe
-![Jason](avatar.png)
-
-line\\
-break
+![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg)
 
 @Caption {
 - Professional iOS Application Architect
 - Amateur Social Scientist
 - Tinker, Maker, Smith
-    - inner
-    - two
 }
 
-[Gravatar](https://jasonjobe.link)\\
-[](https://www.linkedin.com/in/jason-jobe-bb0b991/)
-[](https://medium.com/@jasonjobe)
-[](https://github.com/wildthink)
-[](https://www.instagram.com/jmj_02021/)
+@links {
+    [Gravatar](https://jasonjobe.link)\\
+    [](https://www.linkedin.com/in/jason-jobe-bb0b991/)
+    [](https://medium.com/@jasonjobe)
+    [](https://github.com/wildthink)
+    [](https://www.instagram.com/jmj_02021/)
+}
 
+#### Elevator Pitch
 Here is where I say a little bit about myself.
 Perhaps, what I like to do for fun.
 Or anything else.
-
+"""
+/*
 @comment{ links include linkedIn, github, instagram, etc }
 @place(coordinates: []) {
 Oakland, Maryland US
 }
+*/
 
-
-"""
-,options: [.parseBlockDirectives]
-)
 
 let profileDoc: Document = Document(parsing: """
 # Heading I
@@ -227,13 +306,13 @@ options: [.parseBlockDirectives]
 #if os(macOS)
 import Cocoa
 
-extension NSImage {
-    public func attributedString() -> NSAttributedString {
-        let attachment = ImageAttachment()
-        attachment.image = self
-        return .init(attachment: attachment)
-    }
-}
+//extension NSImage {
+//    public func attributedString() -> NSAttributedString {
+//        let attachment = ImageAttachment()
+//        attachment.image = self
+//        return .init(attachment: attachment)
+//    }
+//}
 
 func foo() -> NSAttributedString {
     let fullString = NSMutableAttributedString(string: "Start of text")

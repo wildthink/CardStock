@@ -11,6 +11,8 @@ import Foundation
 import SwiftUI
 import Markdown
 
+extension NSFont: @unchecked @retroactive Sendable {}
+
 enum TextBreak {
     case none
     case space

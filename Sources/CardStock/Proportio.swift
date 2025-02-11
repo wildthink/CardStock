@@ -7,28 +7,28 @@
 
 import SwiftUI
 
-struct Proportio {
-    var baseCornerRadius: CGFloat = 4
-    var radiusScale: CGFloat = 2
+public struct Proportio: Sendable {
+    public var baseCornerRadius: CGFloat = 4
+    public var radiusScale: CGFloat = 2
     
-    func cornerRadius(level: CGFloat) -> CGFloat {
+    public func cornerRadius(level: CGFloat) -> CGFloat {
         baseCornerRadius * pow(radiusScale, level)
     }
     
-    func elevation(level: CGFloat) -> CGFloat {
+    public func elevation(level: CGFloat) -> CGFloat {
         baseCornerRadius * pow(radiusScale, level)
     }
 }
 
-struct Typography {
+public struct Typography: Sendable {
     
-    var typographyScale: FontScale = .perfectFourth
-    var typographyBase: CGFloat = 12
-    var typographyMaxLevel: Int = 6
+    public var typographyScale: FontScale = .perfectFourth
+    public var typographyBase: CGFloat = 12
+    public var typographyMaxLevel: Int = 6
     
     
     // https://github.com/NateBaldwinDesign/proportio/
-    enum FontScale: CGFloat, CaseIterable {
+    public enum FontScale: CGFloat, CaseIterable, Sendable {
         case minorSecond = 1.067
         case majorSecond = 1.125
         case minorThird = 1.2
@@ -41,12 +41,12 @@ struct Typography {
     }
     
     
-    func padding(level: Int, base: CGFloat? = nil) -> CGPoint {
+    public func padding(level: Int, base: CGFloat? = nil) -> CGPoint {
         let pt = round(fontScale(level: level, base: base)/1.333)
         return CGPoint(x: pt, y: pt)
     }
     
-    func calculateScale(baseSize: CGFloat, scale: CGFloat, increment: CGFloat, scaleMethod: String) -> CGFloat {
+    public func calculateScale(baseSize: CGFloat, scale: CGFloat, increment: CGFloat, scaleMethod: String) -> CGFloat {
         if (scaleMethod == "power") {
             baseSize * pow(scale, increment)
         } else if (scaleMethod == "linear") {
@@ -54,11 +54,11 @@ struct Typography {
         } else { scale * baseSize }
     }
     
-    func typeIconSpace(level: Int, base: CGFloat? = nil) -> CGFloat {
+    public func typeIconSpace(level: Int, base: CGFloat? = nil) -> CGFloat {
         round(fontScale(level: level, base: base)/3.0)
     }
     
-    func fontScale(level: Int, base: CGFloat? = nil) -> CGFloat {
+    public func fontScale(level: Int, base: CGFloat? = nil) -> CGFloat {
         let scale = typographyScale
         let base = base ?? typographyBase
         return if level < 1 {
@@ -68,7 +68,7 @@ struct Typography {
         }
     }
     
-    func fontSize(forHeading level: Int, base: CGFloat? = nil) -> CGFloat {
+    public func fontSize(forHeading level: Int, base: CGFloat? = nil) -> CGFloat {
         return if level > 0 {
             fontScale(level: typographyMaxLevel-level, base: base)
         } else {
