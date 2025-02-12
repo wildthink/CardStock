@@ -21,6 +21,14 @@ public final class XtDocument: @unchecked Sendable {
     }
 }
 
+extension XMLDocument {
+    func formatted() -> String {
+        let data = xmlData(options: .nodePrettyPrint)
+        let str:String? = String(data: data, encoding: .utf8)
+        return str ?? "<XML Document>"
+    }
+}
+
 extension XtDocument {
     func nodes(forXPath xPath: String) -> [XMLMarkup] {
         let ns = try? tree.nodes(forXPath: xPath)

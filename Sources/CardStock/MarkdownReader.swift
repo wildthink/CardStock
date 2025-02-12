@@ -7,25 +7,32 @@
 import Foundation
 import Markdown
 
-class XMLMarkup: XMLElement {
-    var markup: (any Markup)?
-    var markdownLevel: Int = 0
-    var range: SourceRange? { markup?.range }
-    var source: SourceLocation? { range?.lowerBound }
+public final class XMLMarkup: XMLElement {
+    public var markup: (any Markup)?
+    public var markdownLevel: Int = 0
+    public var range: SourceRange? { markup?.range }
+    public var source: SourceLocation? { range?.lowerBound }
     
-    override init(
+    public override init(
         name: String,
         uri URI: String? = nil
     ) {
         super.init(name: name, uri: URI)
     }
 
-    convenience init(markup: any Markup, name: String, kind: XMLNode.Kind = .element) {
+    public convenience init(markup: any Markup, name: String, kind: XMLNode.Kind = .element) {
         self.init(name: name)
         self.markup = markup
     }
 }
 
+public extension XMLMarkup {
+    var attributedString: AttributedString? {
+        guard let markup else { return nil }
+        var reader = Markdownosaur()
+        return reader.visit(markup).str
+    }
+}
 
 public struct MarkdownReader: MarkupVisitor {
     public typealias Result = ()

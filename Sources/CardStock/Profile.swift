@@ -93,7 +93,7 @@ struct ProfileView: View {
     let ns_img = NSImage(systemSymbolName: "message.badge.filled.fill", accessibilityDescription: nil)!
     
     var body: some View {
-        VStack {
+        TabView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(parts, id: \.offset) {
@@ -104,11 +104,24 @@ struct ProfileView: View {
                     }
                 }
             }
-//            Divider()
-//            ScrollView {
-//                Text(doc.debugDescription())
-//            }
-//                        }
+            .tabItem {
+                Label("Profile", systemImage: "doc")
+            }
+            
+            ScrollView {
+                Text(doc.tree.formatted())
+            }
+            .tabItem {
+                Label("XML", systemImage: "doc")
+            }
+
+            
+            ScrollView {
+                Text(doc.document.debugDescription())
+            }
+            .tabItem {
+                Label("Markdown", systemImage: "doc")
+            }
         }
         .environment(\.openURL, OpenURLAction(handler: { url in
             print("Tap on URL: \(url)")
@@ -232,7 +245,9 @@ let jason_md = """
 }
 
 # Jason Jobe
+@hero {
 ![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg)
+}
 
 @Caption {
 - Professional iOS Application Architect
@@ -249,6 +264,7 @@ let jason_md = """
 }
 
 #### Elevator Pitch
+@id(pitch)
 Here is where I say a little bit about myself.
 Perhaps, what I like to do for fun.
 Or anything else.

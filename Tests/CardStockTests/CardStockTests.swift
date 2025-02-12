@@ -53,7 +53,8 @@ final class carbonTests: XCTestCase {
         let doc: Document = profileDoc
         var mr = MarkdownReader()
         mr.visit(doc)
-        mr.tree.print()
+//        mr.tree.print()
+        print(doc.debugDescription())
         
         let xs = mr.tree.xmlString(options: .nodePrettyPrint)
         print(xs)
@@ -68,6 +69,19 @@ final class carbonTests: XCTestCase {
         
         let l = jason.links
         print(l)
+    }
+    
+    func testXpath() {
+        let doc = jason
+        let hero = doc
+            .nodes(forXPath: "//hero")
+            .compactMap(\.attributedString)
+        
+        hero.forEach { print($0) }
+
+        let links = doc.nodes(forXPath: "//links")
+            .compactMap(\.attributedString)
+        print(links)
     }
 }
 
@@ -94,7 +108,8 @@ let md = """
     key2: v2
 }
 
-# Jason Jobe @id(jason)
+# Jason Jobe
+@id(jason)
 ![Jason](https://wildthink.com/apps/jason/avatar.png)
 
 @links {
