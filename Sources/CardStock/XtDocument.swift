@@ -41,6 +41,26 @@ extension XtDocument {
             .compactMap(\.markup)
     }
     
+    var hero: URL? {
+//        let ns = nodes(forXPath: "//hero")
+        nil
+    }
+
+//    var links: [xLink] {
+//        let ns = nodes(forXPath: "//links")
+//        var md = Markdownosaur()
+//        guard let first = ns.first, let markup = first.markup
+//        else { return [] }
+//        let str = md.visit(markup).str
+//        var result: [xLink] = []
+//        for (link, _) in str.runs[\.link] {
+//            guard let link else { continue }
+//            let xl = xLink(label: "link", url: link)
+//            result.append(xl)
+//        }
+//        return result
+//    }
+    
     func markup<M: Markup>(type: M.Type, forXPath xPath: String) -> [M] {
         var visitor = GetNodes<M>()
         let nodes = nodes(forXPath: xPath)

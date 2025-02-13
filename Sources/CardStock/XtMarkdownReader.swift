@@ -7,8 +7,31 @@
 import Foundation
 import Markdown
 
+@dynamicMemberLookup
+struct BlackBox<Item>: CustomStringConvertible {
+    let item: Item
+    
+    init(_ item: Item) {
+        self.item = item
+    }
+    
+    subscript<T>(dynamicMember keyPath: KeyPath<Item, T>) -> T {
+        item[keyPath: keyPath]
+    }
+    
+    var description: String {
+        ""
+//        "(\(String(describing: Item.self)))"
+    }
+}
+
 public final class XMLMarkup: XMLElement {
-    public var markup: (any Markup)?
+    public var markup: Markup?
+//    {
+//        get { (objectValue as? BlackBox<Markup>)?.item }
+//        set { objectValue = newValue.map(BlackBox.init) }
+//    }
+    
     public var markdownLevel: Int = 0
     public var range: SourceRange? { markup?.range }
     public var source: SourceLocation? { range?.lowerBound }
@@ -23,7 +46,7 @@ public final class XMLMarkup: XMLElement {
     public convenience init(markup: any Markup, name: String, kind: XMLNode.Kind = .element) {
         self.init(name: name)
         self.markup = markup
-//        self.objectValue = markup
+//        self.objectValue = BlackBox(markup)
     }
 }
 
@@ -91,7 +114,6 @@ public struct XtMarkdownReader: MarkupVisitor {
         let xn = XElement(markup: node, name: node.name, kind: .processingInstruction)
         push(xn)
         descendInto(node)
-        print("count", node.childCount)
         for child in node.children {
             let p = child.print()
             print(p)

@@ -97,22 +97,48 @@ extension [AttributedString] {
 
 struct ProfileView: View {
     var doc: XtDocument = jason
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading) {
+                ForEach(doc.links) {
+                    LinkView(model: $0)
+                }
+            }
+        }
+    }
+    
+    var hero: some View {
+        AsyncImage(url: doc.hero) { image in
+            image
+                .resizable()
+                .scaledToFill()
+        } placeholder: {
+            ProgressView()
+        }
+    }
+
+}
+
+struct ContentView: View {
+    var doc: XtDocument = jason
 //    @State var mdp = Markdownosaur(baseSize: 8)
     let img = Image(systemName: "message.badge.filled.fill")
     let ns_img = NSImage(systemSymbolName: "message.badge.filled.fill", accessibilityDescription: nil)!
     
     var body: some View {
         TabView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(parts, id: \.offset) {
-                        view($0.element)
-                    }
-                    ForEach(doc.links) {
-                        LinkView(model: $0)
-                    }
-                }
-            }
+            ProfileView(doc: doc)
+//            ScrollView {
+//                VStack(alignment: .leading, spacing: 0) {
+//                    ForEach(parts, id: \.offset) {
+//                        view($0.element)
+//                    }
+//                    ForEach(doc.links) {
+//                        LinkView(model: $0)
+//                    }
+//                }
+//            }
             .tabItem {
                 Label("Profile", systemImage: "doc")
             }
@@ -155,6 +181,7 @@ struct ProfileView: View {
 //               .frame(width: 44, height: 44)
                .background(Color.gray)
                .clipShape(Circle())
+               .padding()
         } else {
             Text(attr)
         }
@@ -239,7 +266,7 @@ struct ProfileView: View {
 //}
 
 #Preview {
-    ProfileView()
+    ContentView()
         .frame(width: 400, height: 500)
         .padding()
 }
@@ -255,6 +282,8 @@ let jason_md = """
 
 # Jason
 @hero {
+# Jason Jobe
+@hero(src: "https://wildthink.com/apps/jason/Jason_AI.jpeg") {
 ![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg)
 }
 
