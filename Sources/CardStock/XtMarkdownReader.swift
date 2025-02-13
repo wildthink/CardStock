@@ -1,5 +1,5 @@
 //
-//  MarkdownReader.swift
+//  XtMarkdownReader.swift
 //  CardStock
 //
 //  Created by Jason Jobe on 2/10/25.
@@ -23,6 +23,14 @@ public final class XMLMarkup: XMLElement {
     public convenience init(markup: any Markup, name: String, kind: XMLNode.Kind = .element) {
         self.init(name: name)
         self.markup = markup
+//        self.objectValue = markup
+    }
+}
+
+extension XMLElement {
+    func addAttribute(name: String, value: Any) {
+        let sv = String(describing: value)
+        addAttribute(XMLNode.attribute(withName: name, stringValue: sv) as! XMLNode)
     }
 }
 
@@ -34,7 +42,7 @@ public extension XMLMarkup {
     }
 }
 
-public struct MarkdownReader: MarkupVisitor {
+public struct XtMarkdownReader: MarkupVisitor {
     public typealias Result = ()
     typealias Node = any Markup
     typealias XElement = XMLMarkup
@@ -92,15 +100,30 @@ public struct MarkdownReader: MarkupVisitor {
     }
 
     mutating public func visitHeading(_ heading: Heading) {
-        let xn = XElement(markup: heading, name: heading.plainText)
-        xn.markdownLevel = heading.level
+        let xn = XElement(markup: heading, name: "section")
+//        xn.markdownLevel = heading.level
+//        xn.addAttribute(name: "level", value: heading.level)
 
+        let title = XElement(markup: heading, name: "heading")
+        title.addAttribute(name: "markdownLevel", value: heading.level)
+        title.stringValue = heading.plainText
+        xn.addChild(title)
+        
         // Pop elements until we find a proper parent
         while let top = stack.last, top.markdownLevel >= heading.level {
             pop()
         }
 
         push(xn)
+    }
+}
+
+public extension Markup {
+    func visit(_ visitor: (any Markup) -> Bool) {
+        guard visitor(self) else { return }
+        for child in children {
+            child.visit(visitor)
+        }
     }
 }
 

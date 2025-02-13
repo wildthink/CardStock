@@ -30,6 +30,15 @@ struct xLink: Identifiable {
 }
 
 extension xLink {
+    init(_ link: Markdown.Link) {
+        let urlString = link.destination ?? "example.com"
+        self.url = URL(string: urlString)!
+        self.label = link.title ?? url.host ?? "example.com"
+        self.customIcon = nil
+    }
+}
+
+extension xLink {
     var defaultIcon: String {
         switch url.scheme {
             case "https", "http": "globe"
@@ -244,7 +253,7 @@ let jason_md = """
     baseURL: https://wildthink.com/apps/jason
 }
 
-# Jason Jobe
+# Jason
 @hero {
 ![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg)
 }
@@ -256,7 +265,7 @@ let jason_md = """
 }
 
 @links {
-    [Gravatar](https://jasonjobe.link)\\
+    [Gravatar](https://jasonjobe.link)
     [](https://www.linkedin.com/in/jason-jobe-bb0b991/)
     [](https://medium.com/@jasonjobe)
     [](https://github.com/wildthink)

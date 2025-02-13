@@ -51,7 +51,7 @@ final class carbonTests: XCTestCase {
     func testReader() throws {
 //        print(dateString)
         let doc: Document = profileDoc
-        var mr = MarkdownReader()
+        var mr = XtMarkdownReader()
         mr.visit(doc)
 //        mr.tree.print()
         print(doc.debugDescription())
