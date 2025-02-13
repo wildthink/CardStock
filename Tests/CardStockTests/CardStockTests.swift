@@ -51,7 +51,7 @@ final class carbonTests: XCTestCase {
     func testReader() throws {
 //        print(dateString)
         let doc: Document = profileDoc
-        var mr = XtMarkdownReader()
+        var mr = XtMarkdownToXML()
         mr.visit(doc)
 //        mr.tree.print()
         print(doc.debugDescription())
@@ -62,7 +62,7 @@ final class carbonTests: XCTestCase {
         if let links = try? mr.tree.nodes(forXPath: "*/links") {
             print(links)
             if let it = links.first as? XMLMarkup, let md = it.markup {
-                print("range", md.range)
+                print("range", md.range as Any)
                 print(md.print())
             }
         }
@@ -73,14 +73,19 @@ final class carbonTests: XCTestCase {
     
     func testXpath() {
         let doc = jason
-        let hero = doc
-            .nodes(forXPath: "//hero")
-            .compactMap(\.attributedString)
-        
-        hero.forEach { print($0) }
+        let hero = doc.attributedStrings(forXPath: "//hero")
 
-        let links = doc.nodes(forXPath: "//links")
-            .compactMap(\.attributedString)
+//            .markup(type: Image.self, forXPath: "//hero")
+//            .compactMap(xLink.init)
+        print(hero)
+//        hero.forEach { print($0) }
+
+        var links: [xLink] = doc
+            .markup(type: Link.self, forXPath: "//links")
+            .compactMap(xLink.init)
+
+//        let links = doc.nodes(forXPath: "//links")
+//            .compactMap(\.attributedString)
         print(links)
     }
 }
@@ -110,7 +115,9 @@ let md = """
 
 # Jason Jobe
 @id(jason)
-![Jason](https://wildthink.com/apps/jason/avatar.png)
+@hero {
+[Jason](https://wildthink.com/apps/jason/avatar.png)
+}
 
 @links {
 - [Gravatar](https://jasonjobe.link)

@@ -16,7 +16,7 @@ public final class XtDocument: @unchecked Sendable {
     init (_ data: String) {
         self.data = data
         let doc = Document(parsing: data, options: [.parseBlockDirectives])
-        tree = XtMarkdownReader.read(doc)
+        tree = XtMarkdownToXML.read(doc)
         document = doc
     }
 }
@@ -41,10 +41,16 @@ extension XtDocument {
             .compactMap(\.markup)
     }
     
-    var hero: URL? {
-//        let ns = nodes(forXPath: "//hero")
-        nil
-    }
+//    var hero: URL? {
+//        let md: [Markup] = markup(forXPath: "//hero")
+//        return switch md {
+//        case let it as [Markdown.Image]:
+//            URL(string: it.first?.source ?? "")
+//        case let it as [Markdown.Link]:
+//            URL(string: it.destination ?? "")
+//        default : nil
+//        }
+//    }
 
 //    var links: [xLink] {
 //        let ns = nodes(forXPath: "//links")
@@ -61,7 +67,7 @@ extension XtDocument {
 //        return result
 //    }
     
-    func markup<M: Markup>(type: M.Type, forXPath xPath: String) -> [M] {
+    func markup<M: Markup>(type: M.Type = M.self, forXPath xPath: String) -> [M] {
         var visitor = GetNodes<M>()
         let nodes = nodes(forXPath: xPath)
             .compactMap(\.markup)
@@ -71,13 +77,25 @@ extension XtDocument {
 
     var links: [xLink] {
         markup(type: Link.self, forXPath: "//links")
-            .map(xLink.init)
+            .compactMap(xLink.init)
     }
     
     func attributedStrings(forXPath xPath: String) -> [AttributedString] {
-        var md = Markdownosaur()
-        return markup(type: Link.self, forXPath: xPath)
-            .map { md.visit($0).str }
+        var mdv = Markdownosaur()
+        let nodes = nodes(forXPath: xPath)
+            .compactMap(\.markup)
+            .compactMap(fn)
+        
+        return nodes
+        func fn(_ md: Markup) -> AttributedString {
+            mdv.visit(md).str
+        }
+        
+//        var visitor = MarkdownVisitor<AttributedString> {
+//            var md = Markdownosaur()
+//            return md.visit($0).str
+//        }
+//        return nodes.flatMap { visitor.apply($0) }
     }
 
     func attributedString() -> AttributedString {
@@ -99,7 +117,7 @@ struct GetNodes<M: Markup>: MarkupVisitor {
     }
     
     mutating
-    public func defaultVisit(_ markup: any Markup) {
+    public func defaultVisit(_ markup: Markup) {
         if let markup = markup as? M {
             nodes.append(markup)
         }
@@ -108,24 +126,39 @@ struct GetNodes<M: Markup>: MarkupVisitor {
         }
     }
 }
-//
-//struct GetLinks: MarkupVisitor {
-//    public typealias Result = ()
-//    public private(set) var links: [Link] = []
-//    public init() {}
-//    mutating func defaultVisit(_ markup: any Markdown.Markup) { }
-//    
-//    public mutating func visitLink(_ link: Link) {
-//        links.append(link)
-//    }
-//}
-//
-//public extension XtDocument {
-//}
 
-extension XtMarkdownReader {
+struct MarkdownVisitor<Element>: MarkupVisitor {
+    public typealias Result = ()
+    public private(set) var marks: [Element] = []
+    var fn: (any Markup) -> Element?
+    
+    public init (fn: @escaping (any Markup) -> Element?) {
+        self.fn = fn
+    }
+    
+    mutating public func apply(_ markup: Markup?) -> [Element] {
+        guard let markup = markup else { return [] }
+        visit(markup)
+        return marks
+    }
+    
+    mutating
+    public func defaultVisit(_ markup: Markup) {
+        if let mark = fn(markup) {
+            marks.append(mark)
+        }
+       for child in markup.children {
+            visit(child)
+        }
+    }
+}
+
+public extension XtDocument {
+}
+
+extension XtMarkdownToXML {
     static func read(_ document: Document) -> XMLDocument {
-        var reader = XtMarkdownReader()
+        var reader = XtMarkdownToXML()
         reader.visit(document)
         return XMLDocument(rootElement: reader.tree)
     }

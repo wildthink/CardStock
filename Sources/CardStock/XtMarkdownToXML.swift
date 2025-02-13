@@ -1,5 +1,5 @@
 //
-//  XtMarkdownReader.swift
+//  XtMarkdownToXML.swift
 //  CardStock
 //
 //  Created by Jason Jobe on 2/10/25.
@@ -25,29 +25,35 @@ struct BlackBox<Item>: CustomStringConvertible {
     }
 }
 
-public final class XMLMarkup: XMLElement {
+     
+open class XMLMarkup: XMLElement {
     public var markup: Markup?
-//    {
-//        get { (objectValue as? BlackBox<Markup>)?.item }
-//        set { objectValue = newValue.map(BlackBox.init) }
-//    }
+    //    {
+    //        get { (objectValue as? BlackBox<Markup>)?.item }
+    //        set { objectValue = newValue.map(BlackBox.init) }
+    //    }
     
     public var markdownLevel: Int = 0
     public var range: SourceRange? { markup?.range }
     public var source: SourceLocation? { range?.lowerBound }
     
-    public override init(
-        name: String,
-        uri URI: String? = nil
-    ) {
+    public override init(name: String, uri URI: String? = nil) {
         super.init(name: name, uri: URI)
+        self.uri = URI
+        self.name = name
     }
-
-    public convenience init(markup: any Markup, name: String, kind: XMLNode.Kind = .element) {
+    
+    public convenience init(markup: any Markup, name: String) {
         self.init(name: name)
         self.markup = markup
 //        self.objectValue = BlackBox(markup)
     }
+    
+    public convenience init(instruction: BlockDirective, name: String? = nil) {
+        self.init(name: name ?? instruction.name)
+        self.markup = instruction
+    }
+
 }
 
 extension XMLElement {
@@ -65,7 +71,7 @@ public extension XMLMarkup {
     }
 }
 
-public struct XtMarkdownReader: MarkupVisitor {
+public struct XtMarkdownToXML: MarkupVisitor {
     public typealias Result = ()
     typealias Node = any Markup
     typealias XElement = XMLMarkup
@@ -110,15 +116,25 @@ public struct XtMarkdownReader: MarkupVisitor {
         return 0  // Default level when no heading is found
     }
     
+    /**
+        The @id BlockDirective is a special case used to addAttributes(...) to its parent XMLElement.
+        Using this can reduce annoying nesting level management.
+     */
     mutating public func visitBlockDirective(_ node: BlockDirective) -> Result {
-        let xn = XElement(markup: node, name: node.name, kind: .processingInstruction)
-        push(xn)
-        descendInto(node)
-        for child in node.children {
-            let p = child.print()
-            print(p)
+        if node.name.lowercased() == "id" {
+            let xe = top
+            let argv = node.argumentText.parseNameValueArguments()
+            for arg in argv {
+                if arg.name.isEmpty {
+                    xe.name = arg.value
+                } else {
+                    xe.addAttribute(name: arg.name, value: arg.value)
+                }
+            }
+        } else {
+            let xn = XElement(instruction: node)
+            top.addChild(xn)
         }
-        pop()
     }
 
     mutating public func visitHeading(_ heading: Heading) {
@@ -135,16 +151,15 @@ public struct XtMarkdownReader: MarkupVisitor {
         while let top = stack.last, top.markdownLevel >= heading.level {
             pop()
         }
-
         push(xn)
     }
 }
 
 public extension Markup {
-    func visit(_ visitor: (any Markup) -> Bool) {
+    func apply(_ visitor: (any Markup) -> Bool) {
         guard visitor(self) else { return }
         for child in children {
-            child.visit(visitor)
+            child.apply(visitor)
         }
     }
 }
@@ -195,7 +210,30 @@ let sampleMarkdown = """
 }
 
 # Jason Jobe
-![Jason](https://wildthink.com/apps/jason/avatar.png)
+@hero {
+![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg)
+}
+
+@Caption {
+- Professional iOS Application Architect
+- Amateur Social Scientist
+- Tinker, Maker, Smith
+}
+
+@links {
+    [Gravatar](https://jasonjobe.link)
+    [](https://www.linkedin.com/in/jason-jobe-bb0b991/)
+    [](https://medium.com/@jasonjobe)
+    [](https://github.com/wildthink)
+    [](https://www.instagram.com/jmj_02021/)
+}
+
+#### Elevator Pitch
+@id(pitch, ax: b
+c 889)
+Here is where I say a little bit about myself.
+Perhaps, what I like to do for fun.
+Or anything else.
 
 ## Section 1
 Section one stuff

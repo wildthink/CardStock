@@ -309,18 +309,18 @@ public struct Markdownosaur: MarkupVisitor {
     
     mutating public
     func visitBlockDirective(_ node: BlockDirective) -> RichText {
-        // TODO: Make the drill in optional
-        RichText()
-//        guard node.name.lowercased() != "comment"
-//        else { return RichText() }
-//        
-//        if node.name.lowercased() == "meta" {
-//            var rtf = RichText("")
-//            rtf.str.scope = node.name
-//            return rtf
-//        }
-//
-//        return richText(for: node.children)
+        // TODO: Make the drill-down optional
+//        RichText()
+        guard node.name.lowercased() != "comment"
+        else { return RichText() }
+        
+        if node.name.lowercased() == "meta" {
+            var rtf = RichText("")
+            rtf.str.scope = node.name
+            return rtf
+        }
+
+        return richText(for: node.children)
 
 //        var label: String
 //        if !node.argumentText.isEmpty {

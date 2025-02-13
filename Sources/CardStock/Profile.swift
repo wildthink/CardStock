@@ -30,10 +30,22 @@ struct xLink: Identifiable {
 }
 
 extension xLink {
-    init(_ link: Markdown.Link) {
-        let urlString = link.destination ?? "example.com"
-        self.url = URL(string: urlString)!
-        self.label = link.title ?? url.host ?? "example.com"
+    
+    init?(_ link: Markdown.Image) {
+        guard let urlString = link.source,
+             let url = URL(string: urlString)
+        else { return nil }
+        self.url = url
+        self.label = link.title ?? url.host ?? urlString
+        self.customIcon = nil
+    }
+
+    init?(_ link: Markdown.Link) {
+        guard let urlString = link.destination,
+             let url = URL(string: urlString)
+        else { return nil }
+        self.url = url
+        self.label = link.title ?? url.host ?? urlString
         self.customIcon = nil
     }
 }
@@ -100,6 +112,8 @@ struct ProfileView: View {
 
     var body: some View {
         ScrollView {
+            hero
+                .padding(48)
             VStack(alignment: .leading) {
                 ForEach(doc.links) {
                     LinkView(model: $0)
@@ -108,20 +122,37 @@ struct ProfileView: View {
         }
     }
     
+    @ViewBuilder
     var hero: some View {
-        AsyncImage(url: doc.hero) { image in
-            image
-                .resizable()
-                .scaledToFill()
-        } placeholder: {
-            ProgressView()
+        if let str = doc.attributedStrings(forXPath: "//hero").first {
+            view(str)
+        }
+    }
+
+    @ViewBuilder
+    func view(_ attr: AttributedString) -> some View {
+        if attr.link != nil {
+            Text(attr)
+                .border(.red)
+        } else if let url = attr.imageURL {
+            AsyncImage(url: url) { image in
+                   image
+                       .resizable()
+                       .scaledToFill()
+               } placeholder: {
+                   ProgressView()
+               }
+               .background(Color.gray)
+               .clipShape(Circle())
+        } else {
+            Text(attr)
         }
     }
 
 }
 
 struct ContentView: View {
-    var doc: XtDocument = jason
+    var doc: XtDocument = XtDocument(sampleMarkdown)
 //    @State var mdp = Markdownosaur(baseSize: 8)
     let img = Image(systemName: "message.badge.filled.fill")
     let ns_img = NSImage(systemSymbolName: "message.badge.filled.fill", accessibilityDescription: nil)!
@@ -139,6 +170,7 @@ struct ContentView: View {
 //                    }
 //                }
 //            }
+
             .tabItem {
                 Label("Profile", systemImage: "doc")
             }
@@ -150,7 +182,6 @@ struct ContentView: View {
                 Label("XML", systemImage: "doc")
             }
 
-            
             ScrollView {
                 Text(doc.document.debugDescription())
             }
@@ -164,28 +195,6 @@ struct ContentView: View {
         }))
     }
     
-    @ViewBuilder
-    func view(_ attr: AttributedString) -> some View {
-        if attr.link != nil {
-            Text(attr)
-                .border(.red)
-        } else if let url = attr.imageURL {
-//            Text("Image: \(value)")
-            AsyncImage(url: url) { image in
-                   image
-                       .resizable()
-                       .scaledToFill()
-               } placeholder: {
-                   ProgressView()
-               }
-//               .frame(width: 44, height: 44)
-               .background(Color.gray)
-               .clipShape(Circle())
-               .padding()
-        } else {
-            Text(attr)
-        }
-    }
     
     var parts: [(offset: Int, element: AttributedString)] {
         let it = Array(partition().enumerated())
@@ -198,64 +207,12 @@ struct ContentView: View {
 //        var new = str
 //        let nl = AttributedString("\n")
         var parts: [AttributedString] = []
-        for (link, range) in str.runs[\.imageURL] {
+        for (_, range) in str.runs[\.imageURL] {
             parts.append(str[range])
         }
         return parts
     }
-    
-//    func _partition() -> [AttributedString] {
-//        let str = mdp.attributedString(from: doc)
-//        var result: [AttributedString] = []
-//        var currentRange: Range<AttributedString.Index>? = nil
-//
-//        for run in str.runs {
-////            if let scope = run.scope {
-////                print("Scope: \(scope)")
-////            }
-//            if let link = run.link {
-//                // Add the current accumulated text range to the result before handling the link
-//                if let range = currentRange {
-//                    result.append(AttributedString(str[range]))
-//                    currentRange = nil
-//                }
-//
-////                print("link", link)
-//                result.append(str[run.range])
-//            } else if let img = run.imageURL {
-//                // Add the current accumulated text range to the result before handling the image
-//                if let range = currentRange {
-//                    result.append(AttributedString(str[range]))
-//                    currentRange = nil
-//                }
-//                
-//                print("img", img)
-//                result.append(str[run.range])
-//                // You could optionally add an image representation here if needed
-////            } else if let scope = run.scope {
-////                print("Scope: \(scope)")
-////
-//            } else {
-//                if let sp = run.textBreak {
-//                    print("Text break: \(sp)")
-//                }
-//                
-//                // Accumulate ranges of consecutive text runs
-//                if let existingRange = currentRange {
-//                    currentRange = existingRange.lowerBound..<run.range.upperBound
-//                } else {
-//                    currentRange = run.range
-//                }
-//            }
-//        }
-//
-//        // Add any remaining accumulated text to the result
-//        if let range = currentRange {
-//            result.append(AttributedString(str[range]))
-//        }
-//
-//        return result
-//    }
+
 }
 
 //func foo() -> AttributedString {
@@ -282,8 +239,6 @@ let jason_md = """
 
 # Jason
 @hero {
-# Jason Jobe
-@hero(src: "https://wildthink.com/apps/jason/Jason_AI.jpeg") {
 ![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg)
 }
 
@@ -302,7 +257,8 @@ let jason_md = """
 }
 
 #### Elevator Pitch
-@id(pitch)
+@id(pitch, ax: b
+c 889)
 Here is where I say a little bit about myself.
 Perhaps, what I like to do for fun.
 Or anything else.
@@ -388,3 +344,56 @@ func foo() -> NSAttributedString {
 }
 #endif
 
+
+//    func _partition() -> [AttributedString] {
+//        let str = mdp.attributedString(from: doc)
+//        var result: [AttributedString] = []
+//        var currentRange: Range<AttributedString.Index>? = nil
+//
+//        for run in str.runs {
+////            if let scope = run.scope {
+////                print("Scope: \(scope)")
+////            }
+//            if let link = run.link {
+//                // Add the current accumulated text range to the result before handling the link
+//                if let range = currentRange {
+//                    result.append(AttributedString(str[range]))
+//                    currentRange = nil
+//                }
+//
+////                print("link", link)
+//                result.append(str[run.range])
+//            } else if let img = run.imageURL {
+//                // Add the current accumulated text range to the result before handling the image
+//                if let range = currentRange {
+//                    result.append(AttributedString(str[range]))
+//                    currentRange = nil
+//                }
+//
+//                print("img", img)
+//                result.append(str[run.range])
+//                // You could optionally add an image representation here if needed
+////            } else if let scope = run.scope {
+////                print("Scope: \(scope)")
+////
+//            } else {
+//                if let sp = run.textBreak {
+//                    print("Text break: \(sp)")
+//                }
+//
+//                // Accumulate ranges of consecutive text runs
+//                if let existingRange = currentRange {
+//                    currentRange = existingRange.lowerBound..<run.range.upperBound
+//                } else {
+//                    currentRange = run.range
+//                }
+//            }
+//        }
+//
+//        // Add any remaining accumulated text to the result
+//        if let range = currentRange {
+//            result.append(AttributedString(str[range]))
+//        }
+//
+//        return result
+//    }
