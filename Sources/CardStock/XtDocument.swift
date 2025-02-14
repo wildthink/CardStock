@@ -9,15 +9,27 @@ import Foundation
 @preconcurrency import Markdown
 
 public final class XtDocument: @unchecked Sendable {
-    var document: Document
-    var tree: XMLDocument
-    var data: String?
+    let document: Document
+    let tree: XMLDocument
+    let data: String?
     
     init (_ data: String) {
         self.data = data
         let doc = Document(parsing: data, options: [.parseBlockDirectives])
         tree = XtMarkdownToXML.read(doc)
         document = doc
+    }
+}
+
+extension XtDocument: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
+        hasher.combine(ObjectIdentifier(tree))
+        hasher.combine(data?.hashValue ?? 0)
+    }
+    
+    public static func == (lhs: XtDocument, rhs: XtDocument) -> Bool {
+        return ObjectIdentifier(lhs) == ObjectIdentifier(rhs)
     }
 }
 
@@ -161,6 +173,37 @@ extension XtMarkdownToXML {
         var reader = XtMarkdownToXML()
         reader.visit(document)
         return XMLDocument(rootElement: reader.tree)
+    }
+}
+
+// Custom iterator for XMLNode traversal
+public struct XMLNodeIterator<Output>: IteratorProtocol {
+    public typealias Modififier = (XMLNode) -> Output?
+    private let nodes: [XMLNode]
+    private var currentIndex = 0
+    private let xform: Modififier?
+    
+    public init(
+        nodes: [XMLNode],
+        currentIndex: Int = 0,
+        xform: Modififier? = nil
+    ) {
+        self.nodes = nodes
+        self.currentIndex = currentIndex
+        self.xform = xform
+    }
+    
+    public mutating func next() -> XMLNode? {
+        guard currentIndex < nodes.count else { return nil }
+        defer { currentIndex += 1 }
+        return nodes[currentIndex]
+    }
+}
+
+// Make XMLNode conform to Sequence
+extension XMLNode: @retroactive Sequence {
+    public func makeIterator() -> XMLNodeIterator<XMLNode> {
+        return XMLNodeIterator(nodes: self.children ?? [])
     }
 }
 

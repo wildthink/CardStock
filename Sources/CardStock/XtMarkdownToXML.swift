@@ -126,7 +126,7 @@ public struct XtMarkdownToXML: MarkupVisitor {
             let argv = node.argumentText.parseNameValueArguments()
             for arg in argv {
                 if arg.name.isEmpty {
-                    xe.name = arg.value
+                    xe.addAttribute(name: "id", value: arg.value)
                 } else {
                     xe.addAttribute(name: arg.name, value: arg.value)
                 }
@@ -139,17 +139,21 @@ public struct XtMarkdownToXML: MarkupVisitor {
 
     mutating public func visitHeading(_ heading: Heading) {
         let xn = XElement(markup: heading, name: "section")
-//        xn.markdownLevel = heading.level
-//        xn.addAttribute(name: "level", value: heading.level)
+        xn.markdownLevel = heading.level
 
         let title = XElement(markup: heading, name: "heading")
-        title.addAttribute(name: "markdownLevel", value: heading.level)
+        title.addAttribute(name: "level", value: heading.level)
         title.stringValue = heading.plainText
         xn.addChild(title)
         
         // Pop elements until we find a proper parent
         while let top = stack.last, top.markdownLevel >= heading.level {
             pop()
+        }
+        if let ndxp = top.attribute(forName: "mdl")?.stringValue {
+            xn.addAttribute(name: "mdl", value: "\(ndxp).\(heading.level)")
+        } else {
+            xn.addAttribute(name: "mdl", value: heading.level)
         }
         push(xn)
     }

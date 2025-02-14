@@ -8,93 +8,6 @@
 import SwiftUI
 @preconcurrency import Markdown
 
-/*
- message (Apple)
- bubble
- envelope emailto:jane@jetsons.com
- phone tel:199999
- globe https: http:
- mappin.and.ellipse 􀎫 geo:25.245470,51.454009
- */
-
-struct xLink: Identifiable {
-    var id: Int { url.absoluteString.hashValue }
-    var label: String
-    var url: URL
-    var customIcon: SwiftUI.Image?
-    
-    var icon: SwiftUI.Image {
-        customIcon ??
-            .init(systemName: commonFavicon ?? defaultIcon)
-    }
-}
-
-extension xLink {
-    
-    init?(_ link: Markdown.Image) {
-        guard let urlString = link.source,
-             let url = URL(string: urlString)
-        else { return nil }
-        self.url = url
-        self.label = link.title ?? url.host ?? urlString
-        self.customIcon = nil
-    }
-
-    init?(_ link: Markdown.Link) {
-        guard let urlString = link.destination,
-             let url = URL(string: urlString)
-        else { return nil }
-        self.url = url
-        self.label = link.title ?? url.host ?? urlString
-        self.customIcon = nil
-    }
-}
-
-extension xLink {
-    var defaultIcon: String {
-        switch url.scheme {
-            case "https", "http": "globe"
-        case "tel": "phone"
-        case "geo": "mappin.and.ellipse"
-        case "sms": "bubble"
-            case "mailto": "envelope"
-        default:
-            "link"
-        }
-    }
-    
-    var commonFavicon: String? {
-        switch url.host {
-        case "apple.com":
-            "apple.logo"
-        default:
-             nil
-        }
-    }
-}
-
-struct LinkView: View {
-    enum Style { case iconOnly, iconAndLabel, labelOnly }
-    var model: xLink
-    var style: Style = .iconAndLabel
-    
-    var body: some View {
-        switch style {
-            case .iconOnly:
-            model.icon.resizable()
-                .frame(width: 16, height: 16)
-        case .iconAndLabel:
-            HStack(alignment: .center) {
-                model.icon.resizable()
-                    .frame(width: 16, height: 16)
-                Text(model.label)
-            }
-        case .labelOnly:
-            Text(model.label)
-        }
-    }
-}
-
 struct xText: View {
     var body: some View {
         Text("")
@@ -107,28 +20,57 @@ extension [AttributedString] {
     }
 }
 
-struct ProfileView: View {
-    var doc: XtDocument = jason
+extension XtDocument {
+    func select(_ xpath: String) {
+        
+    }
+}
 
+public protocol ModelView<Model>: View where Model: Hashable {
+    associatedtype Model
+    var model: Model { get }
+}
+
+struct ProfileView: ModelView {
+    var model: XtDocument = jason
+    
     var body: some View {
-        ScrollView {
-            hero
-                .padding(48)
+        ScrollView(showsIndicators: false) {
             VStack(alignment: .leading) {
-                ForEach(doc.links) {
+                layout(xpath: "//hero[1]", axis: .horizontal)
+                    .padding(48)
+                layout(xpath: "//section[1]/heading[1]", axis: .vertical)
+//                    .padding(48)
+                ForEach(model.links) {
                     LinkView(model: $0)
                 }
             }
         }
     }
-    
+}
+
+public extension ModelView where Model == XtDocument {
+
     @ViewBuilder
-    var hero: some View {
-        if let str = doc.attributedStrings(forXPath: "//hero").first {
-            view(str)
+    func layout(xpath: String, axis: Axis) -> some View {
+        let attr = model.attributedStrings(forXPath: xpath)
+
+        switch axis {
+        case .horizontal:
+            HStack {
+                ForEach(attr, id: \.self) {
+                    view($0)
+                }
+            }
+        case .vertical:
+            VStack {
+                ForEach(attr, id: \.self) {
+                    view($0)
+                }
+            }
         }
     }
-
+    
     @ViewBuilder
     func view(_ attr: AttributedString) -> some View {
         if attr.link != nil {
@@ -159,18 +101,7 @@ struct ContentView: View {
     
     var body: some View {
         TabView {
-            ProfileView(doc: doc)
-//            ScrollView {
-//                VStack(alignment: .leading, spacing: 0) {
-//                    ForEach(parts, id: \.offset) {
-//                        view($0.element)
-//                    }
-//                    ForEach(doc.links) {
-//                        LinkView(model: $0)
-//                    }
-//                }
-//            }
-
+            ProfileView(model: doc)
             .tabItem {
                 Label("Profile", systemImage: "doc")
             }
@@ -224,7 +155,7 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .frame(width: 400, height: 500)
+        .frame(width: 400, height: 700)
         .padding()
 }
 
@@ -257,8 +188,7 @@ let jason_md = """
 }
 
 #### Elevator Pitch
-@id(pitch, ax: b
-c 889)
+@id(pitch, ax: b c 889)
 Here is where I say a little bit about myself.
 Perhaps, what I like to do for fun.
 Or anything else.
@@ -271,46 +201,46 @@ Oakland, Maryland US
 */
 
 
-let profileDoc: Document = Document(parsing: """
-# Heading I
-## Heading II
-### Heading III
-#### Heading IV
-##### Heading V
-###### Heading VI
-
-@() {
-[email](mailto:box@example.com)
-[example.com](https://example.com)
-}
-
-![Image_x](https://wildthink.com/apps/Images/AppIcon.png)
-
-@comment{ links include linkedIn, github, instagram, etc }
-
-
-> Block Quote\n
-> line 2\n
-> line 3
-
-##### List
-1. one
-1. two
-- [ ] check
-- [x] checked
-- three
-
-One sentence here.
-
-```
-Some code
-line 2
-line 3
-```
-
-""",
-options: [.parseBlockDirectives]
-)
+//let profileDoc: Document = Document(parsing: """
+//# Heading I
+//## Heading II
+//### Heading III
+//#### Heading IV
+//##### Heading V
+//###### Heading VI
+//
+//@() {
+//[email](mailto:box@example.com)
+//[example.com](https://example.com)
+//}
+//
+//![Image_x](https://wildthink.com/apps/Images/AppIcon.png)
+//
+//@comment{ links include linkedIn, github, instagram, etc }
+//
+//
+//> Block Quote\n
+//> line 2\n
+//> line 3
+//
+//##### List
+//1. one
+//1. two
+//- [ ] check
+//- [x] checked
+//- three
+//
+//One sentence here.
+//
+//```
+//Some code
+//line 2
+//line 3
+//```
+//
+//""",
+//options: [.parseBlockDirectives]
+//)
 
 // MARK: Misc
 #if os(macOS)
