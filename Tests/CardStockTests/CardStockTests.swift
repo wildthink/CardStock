@@ -76,13 +76,32 @@ final class carbonTests: XCTestCase {
         let hero = doc.attributedStrings(forXPath: "//hero")
         print(hero)
 
-        var links: [xLink] = doc
-            .markup(type: Link.self, forXPath: "//links")
-            .compactMap(xLink.init)
-        print(links)
+//        let heros = doc.tree.nodes(matching: [.anypath, .tag("hero")])
+//        print(heros)
         
-        let h1 = doc.markup(forXPath: "//section[1]/heading[1]")
-        print(h1)
+//        let links: [xLink] = doc
+//            .markup(type: Link.self, forXPath: "//links")
+//            .compactMap(xLink.init)
+//        print(links)
+  
+        let headings = doc.tree
+            .foreach()
+            .lazy
+            .matching(path: "/heading")
+    
+//        print("nth(1)", headings.nth(1)!.format())
+        
+        for h1 in headings {
+            print(h1.format())
+        }
+        print("fin", #function)
+//        let h1 = doc.markup(forXPath: "(//section/heading)[1]")
+//        print(h1)
+//
+//        let h1s = doc.tree.nodes(matching: [.anypath, .tag("section"), .index(1)])
+//        for n in h1s {
+//            print(n.name!, n.stringValue ?? "")
+//        }
 
     }
     
@@ -101,40 +120,184 @@ final class carbonTests: XCTestCase {
         </catalog>
         """
 
-        // Parse XML
-        if let xmlData = xmlString.data(using: .utf8),
-           let xmlDoc = try? XMLDocument(data: xmlData, options: .documentTidyXML),
-           let rootElement = xmlDoc.rootElement() {
-
-//            let itr = rootElement.makeIterator()
-//            for x in itr.next() {
-//                print(x)
-//            }
-            // Iterate through child nodes using for-each
-            for node in rootElement {
-                print("Node Name: \(node.name ?? "Unknown")")
-                
-                for child in node {
-                    print("  Child Node: \(child.name ?? "Unknown") -> \(child.stringValue ?? "No Content")")
-                }
-            }
+        func id(_ n: XMLNode) -> String {
+            (n as? XMLElement)?.attribute(forName: "id")?.stringValue ?? ""
         }
+        func pr(_ n: XMLNode) {
+            print(n.name ?? String(describing: type(of:n)), id(n), n.stringValue ?? "No Content")
+        }
+        
+        /*
+         // layout(xpath: "//section[1]/heading[1]", axis: .vertical)
+         // e.g. catalog[*].section[1].*heading
+         // e.g. catalog//.book[1].title
+         // catalog//.title[1] -> match "title" in depth -> Seq().nth(1)
+         // catalog.book[1].title -> explicit path
+         */
+        
+        // Parse XML
+        guard let xmlData = xmlString.data(using: .utf8),
+           let xmlDoc = try? XMLDocument(data: xmlData, options: .documentTidyXML),
+           let root = xmlDoc.rootElement()
+        else { return }
+
+        let itr = XMLIterator(root)
+        
+        print(root.format())
+        
+        let titles = itr.filter { $0.name == "title" }
+        print(titles)
+        
+        if let n = itr.nth(1) {
+            pr(n)
+        }
+        
+        for x in itr where !id(x).isEmpty {
+            pr(x)
+        }
+//        }
         print("done")
     }
+}
+
+extension XMLNode {
+
+    func matches(path: String) -> Bool {
+        let p = path.split(separator: "/")
+        return matches(path: p[0...])
+    }
     
-    func testXfrom() {
-        // Sample input sequence (numbers)
-        let numbers = [1, 2, 3, 4, 5]
+    func matches(path: ArraySlice<String.SubSequence>) -> Bool {
+        guard let key = path.last, let name, name == key
+        else { return false }
+        let rest = path.dropLast()
+        if rest.isEmpty { return true }
+        // No parent but expects one => false / no match
+        return parent?.matches(path: rest) ?? false
+    }
+}
 
-        // Define a transformation function (e.g., square each number)
-        let squareTransform: (Int) -> String = { "Square of \($0) is \($0 * $0)" }
+extension XMLNode {
+//    func foreach() -> any Sequence<XMLNode> {
+    func foreach() -> XMLIterator {
+        XMLIterator(self)
+    }
+}
 
-        // Get an iterator that transforms numbers to strings
-        var transformedIterator = numbers.transformingIterator(squareTransform)
+public struct XMLIterator: IteratorProtocol, Sequence {
+    private var queue: [XMLNode]
+    // TODO: Add pruning filter function
+    //
+    private var prune: ((XMLNode) -> Bool)?
+    
+    public init(_ parent: XMLNode) {
+        queue = parent.children ?? []
+    }
 
-        // Iterate and print transformed values
-        while let transformedValue = transformedIterator.next() {
-            print(transformedValue)
+    public init(_ nodes: [XMLNode]) {
+        queue = nodes
+    }
+
+    mutating func enqueue(_ nodes: [XMLNode]?) {
+        guard let nodes else { return }
+        if let prune = prune {
+            queue.append(contentsOf: nodes.filter(prune))
+        } else {
+            queue.append(contentsOf: nodes)
+        }
+    }
+    
+    public mutating func next() -> XMLNode? {
+        guard !queue.isEmpty else { return nil }
+        
+        let node = queue.removeFirst()
+        enqueue(node.children)
+        return node
+    }
+}
+
+extension LazySequence where Elements.Element == XMLNode {
+    func nodes(named name: String) -> LazyFilterSequence<Elements> {
+        return self.filter { $0.name == name }
+    }
+    
+    func matching(path: String) -> LazyFilterSequence<Elements> {
+        filter { $0.matches(path: path) }
+    }
+}
+
+extension Sequence where Element == XMLNode {
+    func nodes(named name: String) -> [Element] {
+        filter { $0.name == name }
+    }
+    
+    func matching(path: String) -> [Element] {
+        filter { $0.matches(path: path) }
+    }
+}
+
+//public extension LazyFilterSequence {
+//    func Xmatching(_ isIncluded: @escaping (Self.Elements.Element) -> Bool) -> LazyFilterSequence<Self.Elements>
+//    {
+//        filter(isIncluded)
+//    }
+//    
+//    func matching(path: String) -> LazyFilterSequence<Self.Elements>
+////    where Base == XMLNode
+//    {
+//        filter { $0.matches(path: path) }
+//    }
+//
+//////    func matching(_ path: String) -> Self {
+//////        return self
+//////            .filter { $0.matches(path: path) }
+//////    }
+//}
+
+// LazyFilterSequence
+public extension Sequence {
+    func nth(_ ndx: Int) -> Element? {
+        guard ndx > 0 else {
+            return nil
+        }
+        var count = 1
+        for x in self {
+            if count == ndx {
+                return x
+            }
+            count += 1
+        }
+        return nil
+    }
+}
+
+import Foundation
+
+extension XMLNode {
+    
+    func format() -> String {
+        var str = ""
+        self.format(to: &str)
+        return str
+    }
+
+    func format<OS: TextOutputStream>(_ level: Int = 0, to str: inout OS, isLast: Bool = true, prefix: String = "") {
+        
+        let connector = isLast ? "└── " : "├── "
+        let newPrefix = prefix + (isLast ? String(repeating: " ", count: level * 2) : "│   ")
+        
+        let name = self.name ?? self.stringValue ?? "(null)"
+        if level == 0 {
+            Swift.print(name, separator: "", terminator: "\n", to: &str)
+        } else {
+            Swift.print(prefix, connector, name, separator: "", terminator: "\n", to: &str)
+        }
+
+        guard let children = self.children, !children.isEmpty else { return }
+        
+        for (index, child) in children.enumerated() {
+            let isLastChild = index == children.count - 1
+            child.format(level + 1, to: &str, isLast: isLastChild, prefix: newPrefix)
         }
     }
 }
@@ -173,6 +336,23 @@ struct ArrayWrapper<Store, Element>: RandomAccessCollection {
     }
 }
 
+func testXfrom() {
+    // Sample input sequence (numbers)
+    let numbers = [1, 2, 3, 4, 5]
+
+    // Define a transformation function (e.g., square each number)
+    let squareTransform: (Int) -> String = { "Square of \($0) is \($0 * $0)" }
+
+    // Get an iterator that transforms numbers to strings
+    var transformedIterator = numbers.transformingIterator(squareTransform)
+
+    // Iterate and print transformed values
+    while let transformedValue = transformedIterator.next() {
+        print(transformedValue)
+    }
+    print("Complete", #function)
+}
+
 import Foundation
 
 // Generic Transforming Iterator
@@ -197,6 +377,7 @@ extension Sequence {
         return AnyIterator(TransformingIterator(iterator: self.makeIterator(), transform: transform))
     }
 }
+
 
 // Example Usage
 

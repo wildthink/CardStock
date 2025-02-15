@@ -41,6 +41,115 @@ extension XMLDocument {
     }
 }
 
+extension XMLNode {
+    
+    enum PathComponent {
+        case anyone
+        case anypath
+        case tag(String)
+        case index(Int)
+        case condition((XMLNode) -> Bool)
+    }
+    
+    func nodes(matching path: [PathComponent]) -> [XMLNode] {
+        var result: [XMLNode] = []
+        nodes(matching: path[0...], into: &result)
+        return result
+    }
+
+    /// Returns all leaf nodes that are found matching the path component
+    /// "anyone" matches any single node, "anypath" any number intermediate nodes
+//    func _nodes(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
+////        print("CHECK", self.name ?? "NONE")
+//        guard let cond = path.first else {
+//            list.append(self)
+//            return
+//        }
+//        let matches = switch cond {
+//            case .tag(let tagName): name == tagName
+//            case .index(let idx):   idx == index
+//            case .condition(let predicate): predicate(self)
+//            case .anyone:   true
+//            case .anypath:  true
+//        }
+//        guard matches else { return }
+//        let tail = path.dropFirst()
+//        if case .anypath = cond {
+//            decendents(matching: tail, into: &list)
+//        } else if case .anyone = cond, let children {
+//            children.forEach {
+//                $0.nodes(matching: tail, into: &list)
+//            }
+//        } else {
+//            list.append(self)
+//        }
+//    }
+    
+    func nodes(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
+        guard let cond = path.first else {
+            list.append(self)
+            return
+        }
+        let tail = path.dropFirst()
+        
+        switch cond {
+        case .tag(let tagName):
+            let kids = children?.filter { $0.name == tagName } ?? []
+            nodes(matching: tail, into: &list)
+            case .index(let idx):
+            if idx == index {
+                
+            }
+            case .condition(let predicate):
+            if predicate(self) {
+                nodes(matching: tail, into: &list)
+            }
+            case .anyone:
+                children?.forEach {
+                    $0.nodes(matching: tail, into: &list)
+                }
+            case .anypath:
+                decendents(matching: tail, into: &list)
+        }
+     }
+
+    func decendents(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
+        guard let children, !path.isEmpty else { return }
+        for child in children {
+            child.decendents(matching: path, into: &list)
+//            child.children?.forEach {
+            child.nodes(matching: path, into: &list)
+//            }
+        }
+    }
+}
+
+struct Transducer<E> {
+    var call: (_ e: [E]) -> [E]
+
+    static var filter: Transducer<E> {
+        Transducer { $0 }
+    }
+    
+    static func index(_ i: Int) -> Transducer<E> {
+        Transducer {
+            $0.indices.contains(i) ? [$0[i]] : []
+        }
+    }
+    
+    static func transduce(_ fn: @escaping (E) -> [E]) -> Transducer<E> {
+        Transducer { (xs: [E]) -> [E] in
+            xs.flatMap(fn)
+        }
+    }
+}
+
+extension Array {
+    // filter -> test(Element)
+    // index  -> self[safe: index]
+    // */fn(E)->[E]   -> flatMap(fn)
+}
+
 extension XtDocument {
     
     func nodes(forXPath xPath: String) -> [XMLMarkup] {
@@ -52,32 +161,6 @@ extension XtDocument {
         nodes(forXPath: xPath)
             .compactMap(\.markup)
     }
-    
-//    var hero: URL? {
-//        let md: [Markup] = markup(forXPath: "//hero")
-//        return switch md {
-//        case let it as [Markdown.Image]:
-//            URL(string: it.first?.source ?? "")
-//        case let it as [Markdown.Link]:
-//            URL(string: it.destination ?? "")
-//        default : nil
-//        }
-//    }
-
-//    var links: [xLink] {
-//        let ns = nodes(forXPath: "//links")
-//        var md = Markdownosaur()
-//        guard let first = ns.first, let markup = first.markup
-//        else { return [] }
-//        let str = md.visit(markup).str
-//        var result: [xLink] = []
-//        for (link, _) in str.runs[\.link] {
-//            guard let link else { continue }
-//            let xl = xLink(label: "link", url: link)
-//            result.append(xl)
-//        }
-//        return result
-//    }
     
     func markup<M: Markup>(type: M.Type = M.self, forXPath xPath: String) -> [M] {
         var visitor = GetNodes<M>()
@@ -177,55 +260,43 @@ extension XtMarkdownToXML {
 }
 
 // Custom iterator for XMLNode traversal
-public struct XMLNodeIterator<Output>: IteratorProtocol {
-    public typealias Modififier = (XMLNode) -> Output?
-    private let nodes: [XMLNode]
-    private var currentIndex = 0
-    private let xform: Modififier?
-    
-    public init(
-        nodes: [XMLNode],
-        currentIndex: Int = 0,
-        xform: Modififier? = nil
-    ) {
-        self.nodes = nodes
-        self.currentIndex = currentIndex
-        self.xform = xform
-    }
-    
-    public mutating func next() -> XMLNode? {
-        guard currentIndex < nodes.count else { return nil }
-        defer { currentIndex += 1 }
-        return nodes[currentIndex]
-    }
-}
+//public struct XMLNodeIterator<Output>: IteratorProtocol {
+//    public typealias Modififier = (XMLNode) -> Output?
+//    private var stack: [XMLNode]
+//    private var currentIndex = 0
+//    private let xform: Modififier?
+//    
+//    public init(
+//        root: XMLNode,
+//        currentIndex: Int = 0,
+//        xform: Modififier? = nil
+//    ) {
+//        self.stack = [root]
+//        self.currentIndex = currentIndex
+//        self.xform = xform
+//    }
+//    
+//    public mutating func next() -> XMLNode? {
+//        guard let top = stack.last else { return nil }
+//        if currentIndex >= top.childCount {
+//            // if at last child then try and recurse
+//            // 1st child (only if it has children
+//            if let child = top.children?.first, child.childCount > 0 {
+//                stack.append(child)
+//                currentIndex = 0
+//                return next()
+//            }
+//            stack.removeLast()
+//            currentIndex = 0
+//        }
+//        defer { currentIndex += 1 }
+//        return stack[currentIndex]
+//    }
+//}
 
 // Make XMLNode conform to Sequence
-extension XMLNode: @retroactive Sequence {
-    public func makeIterator() -> XMLNodeIterator<XMLNode> {
-        return XMLNodeIterator(nodes: self.children ?? [])
-    }
-}
-
-//enum NodeType {
-//    case section
-//    case directive
-//    case table
-//    case list
-//    case block
-//}
-//
-//extension XtDocument: MarkupVisitor {
-//    public typealias Result = ()
-//    
-//    mutating func read(document: Document) -> () {
-//        
+//extension XMLNode: @retroactive Sequence {
+//    public func makeIterator() -> XMLNodeIterator<XMLNode> {
+//        return XMLNodeIterator(root: self)
 //    }
-//    
-//    mutating public
-//    func defaultVisit(_ markup: any Markdown.Markup) -> () {
-//        
-//    }
-//    
-//    
 //}

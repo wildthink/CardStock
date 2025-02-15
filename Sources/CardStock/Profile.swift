@@ -39,8 +39,8 @@ struct ProfileView: ModelView {
             VStack(alignment: .leading) {
                 layout(xpath: "//hero[1]", axis: .horizontal)
                     .padding(48)
-                layout(xpath: "//section[1]/heading[1]", axis: .vertical)
-//                    .padding(48)
+                layout(xpath: "(/descendant::section/heading)", axis: .vertical)
+                    .padding(48)
                 ForEach(model.links) {
                     LinkView(model: $0)
                 }
