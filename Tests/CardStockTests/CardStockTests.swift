@@ -73,9 +73,9 @@ final class carbonTests: XCTestCase {
     
     func testXpath() {
         let doc = jason
-        let hero = doc.attributedStrings(forXPath: "//hero")
-        print(hero)
-
+//        let hero = doc.attributedStrings(forXPath: "//hero")
+//        print(hero)
+//
 //        let heros = doc.tree.nodes(matching: [.anypath, .tag("hero")])
 //        print(heros)
         
@@ -84,16 +84,19 @@ final class carbonTests: XCTestCase {
 //            .compactMap(xLink.init)
 //        print(links)
   
-        let headings = doc.tree
+        let items = doc.tree
             .foreach()
-            .lazy
-            .matching(path: "/heading")
+            .matching(path: "/section/heading")
     
 //        print("nth(1)", headings.nth(1)!.format())
         
-        for h1 in headings {
+        for h1 in items {
             print(h1.format())
         }
+        
+        let links = doc.select(links: "links")
+        links.forEach({ print($0)})
+        
         print("fin", #function)
 //        let h1 = doc.markup(forXPath: "(//section/heading)[1]")
 //        print(h1)
@@ -140,165 +143,23 @@ final class carbonTests: XCTestCase {
            let xmlDoc = try? XMLDocument(data: xmlData, options: .documentTidyXML),
            let root = xmlDoc.rootElement()
         else { return }
-
-        let itr = XMLIterator(root)
         
         print(root.format())
-        
-        let titles = itr.filter { $0.name == "title" }
-        print(titles)
-        
-        if let n = itr.nth(1) {
-            pr(n)
+
+        let tests = [
+            "/catalog/book", "catalog/book",
+            "book",
+            "/book", "bad/book",
+        ]
+        for t in tests {
+            let items = root
+                .foreach()
+                .matching(path: t)
+                .first
+            print("TEST", t)
+            if let str = items?.format() { print(str) }
         }
-        
-        for x in itr where !id(x).isEmpty {
-            pr(x)
-        }
-//        }
         print("done")
-    }
-}
-
-extension XMLNode {
-
-    func matches(path: String) -> Bool {
-        let p = path.split(separator: "/")
-        return matches(path: p[0...])
-    }
-    
-    func matches(path: ArraySlice<String.SubSequence>) -> Bool {
-        guard let key = path.last, let name, name == key
-        else { return false }
-        let rest = path.dropLast()
-        if rest.isEmpty { return true }
-        // No parent but expects one => false / no match
-        return parent?.matches(path: rest) ?? false
-    }
-}
-
-extension XMLNode {
-//    func foreach() -> any Sequence<XMLNode> {
-    func foreach() -> XMLIterator {
-        XMLIterator(self)
-    }
-}
-
-public struct XMLIterator: IteratorProtocol, Sequence {
-    private var queue: [XMLNode]
-    // TODO: Add pruning filter function
-    //
-    private var prune: ((XMLNode) -> Bool)?
-    
-    public init(_ parent: XMLNode) {
-        queue = parent.children ?? []
-    }
-
-    public init(_ nodes: [XMLNode]) {
-        queue = nodes
-    }
-
-    mutating func enqueue(_ nodes: [XMLNode]?) {
-        guard let nodes else { return }
-        if let prune = prune {
-            queue.append(contentsOf: nodes.filter(prune))
-        } else {
-            queue.append(contentsOf: nodes)
-        }
-    }
-    
-    public mutating func next() -> XMLNode? {
-        guard !queue.isEmpty else { return nil }
-        
-        let node = queue.removeFirst()
-        enqueue(node.children)
-        return node
-    }
-}
-
-extension LazySequence where Elements.Element == XMLNode {
-    func nodes(named name: String) -> LazyFilterSequence<Elements> {
-        return self.filter { $0.name == name }
-    }
-    
-    func matching(path: String) -> LazyFilterSequence<Elements> {
-        filter { $0.matches(path: path) }
-    }
-}
-
-extension Sequence where Element == XMLNode {
-    func nodes(named name: String) -> [Element] {
-        filter { $0.name == name }
-    }
-    
-    func matching(path: String) -> [Element] {
-        filter { $0.matches(path: path) }
-    }
-}
-
-//public extension LazyFilterSequence {
-//    func Xmatching(_ isIncluded: @escaping (Self.Elements.Element) -> Bool) -> LazyFilterSequence<Self.Elements>
-//    {
-//        filter(isIncluded)
-//    }
-//    
-//    func matching(path: String) -> LazyFilterSequence<Self.Elements>
-////    where Base == XMLNode
-//    {
-//        filter { $0.matches(path: path) }
-//    }
-//
-//////    func matching(_ path: String) -> Self {
-//////        return self
-//////            .filter { $0.matches(path: path) }
-//////    }
-//}
-
-// LazyFilterSequence
-public extension Sequence {
-    func nth(_ ndx: Int) -> Element? {
-        guard ndx > 0 else {
-            return nil
-        }
-        var count = 1
-        for x in self {
-            if count == ndx {
-                return x
-            }
-            count += 1
-        }
-        return nil
-    }
-}
-
-import Foundation
-
-extension XMLNode {
-    
-    func format() -> String {
-        var str = ""
-        self.format(to: &str)
-        return str
-    }
-
-    func format<OS: TextOutputStream>(_ level: Int = 0, to str: inout OS, isLast: Bool = true, prefix: String = "") {
-        
-        let connector = isLast ? "└── " : "├── "
-        let newPrefix = prefix + (isLast ? String(repeating: " ", count: level * 2) : "│   ")
-        
-        let name = self.name ?? self.stringValue ?? "(null)"
-        if level == 0 {
-            Swift.print(name, separator: "", terminator: "\n", to: &str)
-        } else {
-            Swift.print(prefix, connector, name, separator: "", terminator: "\n", to: &str)
-        }
-
-        guard let children = self.children, !children.isEmpty else { return }
-        
-        for (index, child) in children.enumerated() {
-            let isLastChild = index == children.count - 1
-            child.format(level + 1, to: &str, isLast: isLastChild, prefix: newPrefix)
-        }
     }
 }
 
@@ -344,7 +205,7 @@ func testXfrom() {
     let squareTransform: (Int) -> String = { "Square of \($0) is \($0 * $0)" }
 
     // Get an iterator that transforms numbers to strings
-    var transformedIterator = numbers.transformingIterator(squareTransform)
+    let transformedIterator = numbers.transformingIterator(squareTransform)
 
     // Iterate and print transformed values
     while let transformedValue = transformedIterator.next() {
@@ -382,18 +243,18 @@ extension Sequence {
 // Example Usage
 
 
-func prettyFormat(xmlString:String) -> String? {
-  do {
-    let xml = try XMLDocument.init(xmlString: xmlString)
-    let data = xml.xmlData(options: .nodePrettyPrint)
-    let str:String? = String(data: data, encoding: .utf8)
-    return str
-  }
-  catch {
-    print (error.localizedDescription)
-  }
-  return nil
-}
+//func prettyFormat(xmlString:String) -> String? {
+//  do {
+//    let xml = try XMLDocument.init(xmlString: xmlString)
+//    let data = xml.xmlData(options: .nodePrettyPrint)
+//    let str:String? = String(data: data, encoding: .utf8)
+//    return str
+//  }
+//  catch {
+//    print (error.localizedDescription)
+//  }
+//  return nil
+//}
 
 @preconcurrency import Markdown
 //let profileDoc: Document = Document(parsing: md, options: [.parseBlockDirectives])

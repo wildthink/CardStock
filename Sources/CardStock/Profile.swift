@@ -37,11 +37,11 @@ struct ProfileView: ModelView {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading) {
-                layout(xpath: "//hero[1]", axis: .horizontal)
-                    .padding(48)
-                layout(xpath: "(/descendant::section/heading)", axis: .vertical)
-                    .padding(48)
-                ForEach(model.links) {
+                layout(first: "hero")
+//                    .padding(48)
+//                layout(all: "section/heading", axis: .vertical)
+//                    .padding(48)
+                ForEach(model.select(links: "links")) {
                     LinkView(model: $0)
                 }
             }
@@ -49,8 +49,77 @@ struct ProfileView: ModelView {
     }
 }
 
+public extension XtDocument {
+    
+    func select(links xpath: String) -> [xLink] {
+        tree
+            .foreach()
+            .matching(path: xpath)
+            .compactMap({ $0 as? XMLMarkup })
+            .compactMap(\.markup)
+            .compactMap({ $0 as? Markdown.Link })
+            .compactMap(xLink.init)
+    }
+
+    func select(markup xpath: String) -> [XMLMarkup] {
+        tree
+            .foreach()
+            .matching(path: xpath)
+            .compactMap({ $0 as? XMLMarkup })
+    }
+}
+
+//func attributedString() -> AttributedString {
+//    var mdv = Markdownosaur()
+//    let nodes = nodes(forXPath: xPath)
+//        .compactMap(\.markup)
+//        .compactMap(fn)
+//    
+//    return nodes
+//    func fn(_ md: Markup) -> AttributedString {
+//        mdv.visit(md).str
+//    }
+//}
+
 public extension ModelView where Model == XtDocument {
 
+    @ViewBuilder
+    func layout(first xpath: String) -> some View {
+        if let item = model.tree
+            .foreach()
+            .matching(path: xpath)
+            .compactMap({ $0 as? XMLMarkup })
+            .compactMap(\.attributedString)
+            .first
+        {
+            view(item)
+        }
+    }
+    
+    @ViewBuilder
+    func layout(all xpath: String, axis: Axis) -> some View {
+        let attr = model.tree
+            .foreach()
+            .matching(path: xpath)
+            .compactMap({ $0 as? XMLMarkup })
+            .compactMap(\.attributedString)
+
+        switch axis {
+        case .horizontal:
+            HStack {
+                ForEach(attr, id: \.self) {
+                    view($0).border(.red)
+                }
+            }
+        case .vertical:
+            VStack {
+                ForEach(attr, id: \.self) {
+                    view($0).border(.red)
+                }
+            }
+        }
+    }
+    
     @ViewBuilder
     func layout(xpath: String, axis: Axis) -> some View {
         let attr = model.attributedStrings(forXPath: xpath)
