@@ -260,37 +260,34 @@ extension XtMarkdownToXML {
 }
 
 // Custom iterator for XMLNode traversal
-//public struct XMLNodeIterator<Output>: IteratorProtocol {
-//    public typealias Modififier = (XMLNode) -> Output?
-//    private var stack: [XMLNode]
-//    private var currentIndex = 0
-//    private let xform: Modififier?
+//public struct MarkupIterator: IteratorProtocol, Sequence {
+//    public typealias Node = any Markup
+//    private var queue: [Node]
+//    private var prune: ((Node) -> Bool)?
 //    
-//    public init(
-//        root: XMLNode,
-//        currentIndex: Int = 0,
-//        xform: Modififier? = nil
-//    ) {
-//        self.stack = [root]
-//        self.currentIndex = currentIndex
-//        self.xform = xform
+//    public init(_ parent: Node) {
+//        queue = parent.children
 //    }
 //    
-//    public mutating func next() -> XMLNode? {
-//        guard let top = stack.last else { return nil }
-//        if currentIndex >= top.childCount {
-//            // if at last child then try and recurse
-//            // 1st child (only if it has children
-//            if let child = top.children?.first, child.childCount > 0 {
-//                stack.append(child)
-//                currentIndex = 0
-//                return next()
-//            }
-//            stack.removeLast()
-//            currentIndex = 0
+//    public init(_ nodes: [Node]) {
+//        queue = nodes
+//    }
+//    
+//    mutating func enqueue(_ nodes: [Node]?) {
+//        guard let nodes else { return }
+//        if let prune = prune {
+//            queue.append(contentsOf: nodes.filter(prune))
+//        } else {
+//            queue.append(contentsOf: nodes)
 //        }
-//        defer { currentIndex += 1 }
-//        return stack[currentIndex]
+//    }
+//    
+//    public mutating func next() -> Node? {
+//        guard !queue.isEmpty else { return nil }
+//        
+//        let node = queue.removeFirst()
+//        enqueue(node.children)
+//        return node
 //    }
 //}
 

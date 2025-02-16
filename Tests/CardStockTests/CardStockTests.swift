@@ -73,39 +73,40 @@ final class carbonTests: XCTestCase {
     
     func testXpath() {
         let doc = jason
-//        let hero = doc.attributedStrings(forXPath: "//hero")
-//        print(hero)
-//
-//        let heros = doc.tree.nodes(matching: [.anypath, .tag("hero")])
-//        print(heros)
-        
-//        let links: [xLink] = doc
-//            .markup(type: Link.self, forXPath: "//links")
-//            .compactMap(xLink.init)
-//        print(links)
   
-        let items = doc.tree
-            .foreach()
-            .matching(path: "/section/heading")
-    
-//        print("nth(1)", headings.nth(1)!.format())
+//        let items = doc.tree
+//            .foreach()
+//            .matching(path: "/section/heading")
+//            
+//        for h1 in items {
+//            print(h1.format())
+//        }
         
-        for h1 in items {
-            print(h1.format())
+        func trace<T>(_ v: T) -> T {
+            print(String(describing: v))
+            return v
         }
         
-        let links = doc.select(links: "links")
-        links.forEach({ print($0)})
-        
-        print("fin", #function)
-//        let h1 = doc.markup(forXPath: "(//section/heading)[1]")
-//        print(h1)
-//
-//        let h1s = doc.tree.nodes(matching: [.anypath, .tag("section"), .index(1)])
-//        for n in h1s {
-//            print(n.name!, n.stringValue ?? "")
-//        }
+        let mlinks = doc.select("links", ofType: Link.self)
+//        let xlinks = mlinks
+            .compactMap(xLink.init)
+        mlinks.forEach({ print($0) })
 
+        //select(links: "links")
+        
+        let links = doc.tree
+            .foreach()
+            .lazy
+            .matching(path: "links")
+            .cast(to: XMLMarkup.self)
+            .compactMap(\.markup)
+            .nodes(ofType: Link.self)
+            .compactMap(xLink.init)
+        
+
+        links.forEach({ print($0) })
+               
+        print("fin", #function)
     }
     
     func testXMLIterator() {
@@ -161,6 +162,92 @@ final class carbonTests: XCTestCase {
         }
         print("done")
     }
+}
+
+public extension XtDocument {
+    
+    func select<M: Markup>(
+        _ select: String,
+        ofType mt: M.Type
+    ) -> some Sequence<M> {
+        tree.foreach()
+            .matching(path: select)
+            .cast(to: XMLMarkup.self)
+            .compactMap(\.markup)
+            .nodes(ofType: M.self)
+    }
+}
+
+// MARK: Sequence<Markdown> Extenstions
+public extension LazySequence where Elements.Element: Markup {
+    func nodes<M: Markup>(ofType mt: M.Type) -> LazyFilterSequence<Elements> {
+        return self.filter { $0 is M }
+    }
+//    
+//    func matching(path: String) -> LazyFilterSequence<Elements> {
+//        filter { $0.matches(path: path) }
+//    }
+}
+
+public extension Sequence {
+    
+    func markup<M: Markup>(select: String, ofType mt: M.Type) -> [M]
+    where Element: XMLNode {
+        var results: [M] = []
+        for item in self {
+            let nodes = item
+                .foreach()
+                .lazy
+                .matching(path: select)
+                .cast(to: XMLMarkup.self)
+                .compactMap(\.markup)
+                .nodes(ofType: M.self)
+            results.append(contentsOf: nodes)
+        }
+        return results
+    }
+    
+    func nodes<M: Markup>(ofType mt: M.Type) -> [M]
+    where Element: Markup {
+        var visitor = GetNodes<M>()
+        self.forEach({ visitor.visit($0) })
+        return visitor.nodes
+    }
+    
+    func nodes<M: Markup>(ofType mt: M.Type) -> [M]
+    where Element == (any Markup)? {
+        var visitor = GetNodes<M>()
+        self.forEach {
+            guard let it = $0 else { return }
+            visitor.visit(it)
+        }
+        return visitor.nodes
+    }
+
+//    func matching(path: String) -> [Element] {
+//        let list = filter { $0.matches(path: path) }
+//        return list
+//    }
+}
+
+extension Sequence {
+//    func debug<T>(to type: T.Type) -> [T] {
+//        compactMap { ($0 as? T) }
+//    }
+
+    func cast<T>(to type: T.Type) -> [T] {
+        compactMap {
+            print($0, "as", T.self)
+            return ($0 as? T)
+        }
+    }
+
+    func cast<T, U>(to type: T.Type, transform: (T) -> U?) -> [U] {
+        compactMap { ($0 as? T).flatMap(transform) }
+    }
+}
+
+extension MarkupChildren.Iterator: @retroactive Sequence {
 }
 
 struct ArrayWrapper<Store, Element>: RandomAccessCollection {
@@ -234,6 +321,23 @@ struct TransformingIterator<Input, Output>: IteratorProtocol {
 
 // Make Sequence support transforming iterators
 extension Sequence {
+    
+//    func cast<T>(to : T.Type) -> (Self.Element) -> [T] {
+//        var values = [T]()
+//        
+//        for element in self {
+//            if let it = element as? T {
+//                values.append(it)
+//            }
+//        }
+//        return values
+//    }
+
+//    func map<T, E>(_ transform: (Self.Element) (E) -> [T] where E : Error
+//    {
+//        
+//    }
+    
     func transformingIterator<Output>(_ transform: @escaping (Element) -> Output) -> AnyIterator<Output> {
         return AnyIterator(TransformingIterator(iterator: self.makeIterator(), transform: transform))
     }

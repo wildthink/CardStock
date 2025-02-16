@@ -31,9 +31,8 @@ public extension XMLNode {
 }
 
 public struct XMLIterator: IteratorProtocol, Sequence {
+    public typealias Element = XMLNode
     private var queue: [XMLNode]
-    // TODO: Add pruning filter function
-    //
     private var prune: ((XMLNode) -> Bool)?
     
     public init(_ parent: XMLNode) {
@@ -79,7 +78,8 @@ public extension Sequence where Element == XMLNode {
     }
     
     func matching(path: String) -> [Element] {
-        filter { $0.matches(path: path) }
+        let list = filter { $0.matches(path: path) }
+        return list
     }
 }
 

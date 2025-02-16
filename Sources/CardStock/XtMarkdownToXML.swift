@@ -121,7 +121,8 @@ public struct XtMarkdownToXML: MarkupVisitor {
         Using this can reduce annoying nesting level management.
      */
     mutating public func visitBlockDirective(_ node: BlockDirective) -> Result {
-        if node.name.lowercased() == "id" {
+        let name = node.name.lowercased()
+        if name == "id" {
             let xe = top
             let argv = node.argumentText.parseNameValueArguments()
             for arg in argv {

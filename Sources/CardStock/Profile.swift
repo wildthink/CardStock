@@ -20,11 +20,11 @@ extension [AttributedString] {
     }
 }
 
-extension XtDocument {
-    func select(_ xpath: String) {
-        
-    }
-}
+//extension XtDocument {
+//    func select(_ xpath: String) {
+//        
+//    }
+//}
 
 public protocol ModelView<Model>: View where Model: Hashable {
     associatedtype Model
