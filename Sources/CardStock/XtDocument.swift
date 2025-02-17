@@ -124,74 +124,43 @@ extension XMLNode {
     }
 }
 
-struct Transducer<E> {
-    var call: (_ e: [E]) -> [E]
-
-    static var filter: Transducer<E> {
-        Transducer { $0 }
-    }
-    
-    static func index(_ i: Int) -> Transducer<E> {
-        Transducer {
-            $0.indices.contains(i) ? [$0[i]] : []
-        }
-    }
-    
-    static func transduce(_ fn: @escaping (E) -> [E]) -> Transducer<E> {
-        Transducer { (xs: [E]) -> [E] in
-            xs.flatMap(fn)
-        }
-    }
-}
-
-extension Array {
-    // filter -> test(Element)
-    // index  -> self[safe: index]
-    // */fn(E)->[E]   -> flatMap(fn)
-}
-
 extension XtDocument {
     
-    func nodes(forXPath xPath: String) -> [XMLMarkup] {
-        let ns = try? tree.nodes(forXPath: xPath)
-        return ns as? [XMLMarkup] ?? []
-    }
+//    func nodes(forXPath xPath: String) -> [XMLMarkup] {
+//        let ns = try? tree.nodes(forXPath: xPath)
+//        return ns as? [XMLMarkup] ?? []
+//    }
 
-    func markup(forXPath xPath: String) -> [any Markup] {
-        nodes(forXPath: xPath)
-            .compactMap(\.markup)
-    }
-    
-    func markup<M: Markup>(type: M.Type = M.self, forXPath xPath: String) -> [M] {
-        var visitor = GetNodes<M>()
-        let nodes = nodes(forXPath: xPath)
-            .compactMap(\.markup)
-        
-        return visitor.visit(nodes)
-    }
+//    func markup(forXPath xPath: String) -> [any Markup] {
+//        nodes(forXPath: xPath)
+//            .compactMap(\.markup)
+//    }
+//    
+//    func markup<M: Markup>(type: M.Type = M.self, forXPath xPath: String) -> [M] {
+//        var visitor = GetNodes<M>()
+//        let nodes = nodes(forXPath: xPath)
+//            .compactMap(\.markup)
+//        
+//        return visitor.visit(nodes)
+//    }
 
     var links: [xLink] {
-        markup(type: Link.self, forXPath: "//links")
+//        markup(type: Link.self, forXPath: "//links")
+        select("links", ofType: Link.self)
             .compactMap(xLink.init)
     }
     
-    func attributedStrings(forXPath xPath: String) -> [AttributedString] {
-        var mdv = Markdownosaur()
-        let nodes = nodes(forXPath: xPath)
-            .compactMap(\.markup)
-            .compactMap(fn)
-        
-        return nodes
-        func fn(_ md: Markup) -> AttributedString {
-            mdv.visit(md).str
-        }
-        
-//        var visitor = MarkdownVisitor<AttributedString> {
-//            var md = Markdownosaur()
-//            return md.visit($0).str
+//    func attributedStrings(forXPath xPath: String) -> [AttributedString] {
+//        var mdv = Markdownosaur()
+//        let nodes = nodes(forXPath: xPath)
+//            .compactMap(\.markup)
+//            .compactMap(fn)
+//        
+//        return nodes
+//        func fn(_ md: Markup) -> AttributedString {
+//            mdv.visit(md).str
 //        }
-//        return nodes.flatMap { visitor.apply($0) }
-    }
+//    }
 
     func attributedString() -> AttributedString {
         var md = Markdownosaur()
@@ -259,41 +228,63 @@ extension XtMarkdownToXML {
     }
 }
 
-// Custom iterator for XMLNode traversal
-//public struct MarkupIterator: IteratorProtocol, Sequence {
-//    public typealias Node = any Markup
-//    private var queue: [Node]
-//    private var prune: ((Node) -> Bool)?
-//    
-//    public init(_ parent: Node) {
-//        queue = parent.children
-//    }
-//    
-//    public init(_ nodes: [Node]) {
-//        queue = nodes
-//    }
-//    
-//    mutating func enqueue(_ nodes: [Node]?) {
-//        guard let nodes else { return }
-//        if let prune = prune {
-//            queue.append(contentsOf: nodes.filter(prune))
-//        } else {
-//            queue.append(contentsOf: nodes)
-//        }
-//    }
-//    
-//    public mutating func next() -> Node? {
-//        guard !queue.isEmpty else { return nil }
-//        
-//        let node = queue.removeFirst()
-//        enqueue(node.children)
-//        return node
+public extension XtDocument {
+    
+    func select<M: Markup>(
+        _ select: String,
+        ofType mt: M.Type
+    ) -> some Sequence<M> {
+        tree.foreach()
+            .matching(path: select)
+            .cast(to: XMLMarkup.self)
+            .compactMap(\.markup)
+            .nodes(ofType: M.self)
+    }
+}
+
+// MARK: Sequence<Markdown> Extenstions
+//public extension LazySequence where Elements.Element: Markup {
+//    func nodes<M: Markup>(ofType mt: M.Type) -> LazyFilterSequence<Elements> {
+//        return self.filter { $0 is M }
 //    }
 //}
 
-// Make XMLNode conform to Sequence
-//extension XMLNode: @retroactive Sequence {
-//    public func makeIterator() -> XMLNodeIterator<XMLNode> {
-//        return XMLNodeIterator(root: self)
-//    }
-//}
+public extension Sequence {
+    
+    func select<M: Markup>(
+        _ select: String,
+        ofType mt: M.Type
+    ) -> some Sequence<M> where Element: XMLNode {
+        var results: [M] = []
+        for item in self {
+            let nodes = item
+                .foreach()
+                .lazy
+                .matching(path: select)
+                .cast(to: XMLMarkup.self)
+                .compactMap(\.markup)
+                .nodes(ofType: M.self)
+            results.append(contentsOf: nodes)
+        }
+        return results
+    }
+    
+    func nodes<M: Markup>(ofType mt: M.Type) -> [M]
+    where Element: Markup {
+        var visitor = GetNodes<M>()
+        self.forEach({ visitor.visit($0) })
+        return visitor.nodes
+    }
+    
+    func nodes<M: Markup>(ofType mt: M.Type) -> [M]
+    where Element == (any Markup)? {
+        var visitor = GetNodes<M>()
+        self.forEach {
+            guard let it = $0 else { return }
+            visitor.visit(it)
+        }
+        return visitor.nodes
+    }
+}
+
+extension MarkupChildren.Iterator: @retroactive Sequence { }

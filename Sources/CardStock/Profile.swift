@@ -39,9 +39,12 @@ struct ProfileView: ModelView {
             VStack(alignment: .leading) {
                 layout(first: "hero")
 //                    .padding(48)
+                layout(first: "Caption")
+//                layout(first: "pitch")
+
 //                layout(all: "section/heading", axis: .vertical)
 //                    .padding(48)
-                ForEach(model.select(links: "links")) {
+                ForEach(model.links) {
                     LinkView(model: $0)
                 }
             }
@@ -49,25 +52,25 @@ struct ProfileView: ModelView {
     }
 }
 
-public extension XtDocument {
-    
-    func select(links xpath: String) -> [xLink] {
-        tree
-            .foreach()
-            .matching(path: xpath)
-            .compactMap({ $0 as? XMLMarkup })
-            .compactMap(\.markup)
-            .compactMap({ $0 as? Markdown.Link })
-            .compactMap(xLink.init)
-    }
-
-    func select(markup xpath: String) -> [XMLMarkup] {
-        tree
-            .foreach()
-            .matching(path: xpath)
-            .compactMap({ $0 as? XMLMarkup })
-    }
-}
+//public extension XtDocument {
+//    
+//    func select(links xpath: String) -> [xLink] {
+//        tree
+//            .foreach()
+//            .matching(path: xpath)
+//            .compactMap({ $0 as? XMLMarkup })
+//            .compactMap(\.markup)
+//            .compactMap({ $0 as? Markdown.Link })
+//            .compactMap(xLink.init)
+//    }
+//
+//    func select(markup xpath: String) -> [XMLMarkup] {
+//        tree
+//            .foreach()
+//            .matching(path: xpath)
+//            .compactMap({ $0 as? XMLMarkup })
+//    }
+//}
 
 //func attributedString() -> AttributedString {
 //    var mdv = Markdownosaur()
@@ -119,27 +122,7 @@ public extension ModelView where Model == XtDocument {
             }
         }
     }
-    
-    @ViewBuilder
-    func layout(xpath: String, axis: Axis) -> some View {
-        let attr = model.attributedStrings(forXPath: xpath)
-
-        switch axis {
-        case .horizontal:
-            HStack {
-                ForEach(attr, id: \.self) {
-                    view($0)
-                }
-            }
-        case .vertical:
-            VStack {
-                ForEach(attr, id: \.self) {
-                    view($0)
-                }
-            }
-        }
-    }
-    
+        
     @ViewBuilder
     func view(_ attr: AttributedString) -> some View {
         if attr.link != nil {
@@ -176,17 +159,28 @@ struct ContentView: View {
             }
             
             ScrollView {
-                Text(doc.tree.formatted())
+                Text(doc.tree.rootElement()!.format())
+                    .multilineTextAlignment(.leading)
+                    .monospaced()
             }
             .tabItem {
                 Label("XML", systemImage: "doc")
             }
 
+            if let text = doc.data {
+                ScrollView {
+                    Text(text)
+                }
+                .tabItem {
+                    Label("Text", systemImage: "doc")
+                }
+            }
             ScrollView {
                 Text(doc.document.debugDescription())
+                    .monospaced()
             }
             .tabItem {
-                Label("Markdown", systemImage: "doc")
+                Label("Tree", systemImage: "doc")
             }
         }
         .environment(\.openURL, OpenURLAction(handler: { url in
@@ -228,9 +222,9 @@ struct ContentView: View {
         .padding()
 }
 
-let jason = XtDocument(jason_md)
-
 //let jason: Document = Document(parsing: jason_md,options: [.parseBlockDirectives])
+
+let jason = XtDocument(jason_md)
 
 let jason_md = """
 @meta {

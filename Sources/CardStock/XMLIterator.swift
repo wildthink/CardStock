@@ -108,16 +108,29 @@ public extension XMLNode {
         return str
     }
 
+    var formattedName: String {
+        let tag = self.name ?? self.stringValue ?? "(null)"
+        
+        return if let tch = child(at: 0),
+                    tch.kind == .text,
+                    let txt = tch.stringValue
+        {
+            "\(tag) \(txt)"
+        } else {
+            tag
+        }
+    }
+    
     func format<OS: TextOutputStream>(_ level: Int = 0, to str: inout OS, isLast: Bool = true, prefix: String = "") {
         
         let connector = isLast ? "└── " : "├── "
         let newPrefix = prefix + (isLast ? String(repeating: " ", count: level * 2) : "│   ")
         
-        let name = self.name ?? self.stringValue ?? "(null)"
+//        let name = self.name ?? self.stringValue ?? "(null)"
         if level == 0 {
-            Swift.print(name, separator: "", terminator: "\n", to: &str)
+            Swift.print(formattedName, separator: "", terminator: "\n", to: &str)
         } else {
-            Swift.print(prefix, connector, name, separator: "", terminator: "\n", to: &str)
+            Swift.print(prefix, connector, formattedName, separator: "", terminator: "\n", to: &str)
         }
 
         guard let children = self.children, !children.isEmpty else { return }
