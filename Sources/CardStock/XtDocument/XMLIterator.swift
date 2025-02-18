@@ -20,7 +20,7 @@ public extension XMLNode {
     
     func matches(path: ArraySlice<String.SubSequence>) -> Bool {
         let name = self.name ?? ""
-        guard let key = path.last, name == key
+        guard let key = path.last, name.caseInsensitiveEqual(key)
         else { return false }
 
         let rest = path.dropLast()
@@ -64,17 +64,17 @@ public struct XMLIterator: IteratorProtocol, Sequence {
 // MARK: Sequence<XMLNode> Extenstions
 public extension LazySequence where Elements.Element == XMLNode {
     func nodes(named name: String) -> LazyFilterSequence<Elements> {
-        return self.filter { $0.name == name }
+        return self.filter { name.caseInsensitiveEqual($0.name) }
     }
     
-    func matching(path: String) -> LazyFilterSequence<Elements> {
-        filter { $0.matches(path: path) }
-    }
+//    func matching(path: String) -> LazyFilterSequence<Elements> {
+//        filter { name.caseInsensitiveEqual($0.name) }
+//    }
 }
 
 public extension Sequence where Element == XMLNode {
     func nodes(named name: String) -> [Element] {
-        filter { $0.name == name }
+        filter { name.caseInsensitiveEqual($0.name) }
     }
     
     func matching(path: String) -> [Element] {
@@ -85,6 +85,7 @@ public extension Sequence where Element == XMLNode {
 
 // LazyFilterSequence
 public extension Sequence {
+//public extension LazySequence {
     func nth(_ ndx: Int) -> Element? {
         guard ndx > 0 else {
             return nil
@@ -108,16 +109,16 @@ public extension XMLNode {
         return str
     }
 
-    var formattedName: String {
+    var formattedName: (name: String, includesChild: Bool) {
         let tag = self.name ?? self.stringValue ?? "(null)"
         
         return if let tch = child(at: 0),
                     tch.kind == .text,
                     let txt = tch.stringValue
         {
-            "\(tag) \(txt)"
+            ("\(tag) '\(txt)'", true)
         } else {
-            tag
+            (tag, false)
         }
     }
     
@@ -127,13 +128,17 @@ public extension XMLNode {
         let newPrefix = prefix + (isLast ? String(repeating: " ", count: level * 2) : "│   ")
         
 //        let name = self.name ?? self.stringValue ?? "(null)"
+        let (name, includesChild) = formattedName
         if level == 0 {
-            Swift.print(formattedName, separator: "", terminator: "\n", to: &str)
+            Swift.print(name, separator: "", terminator: "\n", to: &str)
         } else {
-            Swift.print(prefix, connector, formattedName, separator: "", terminator: "\n", to: &str)
+            Swift.print(prefix, connector, name, separator: "", terminator: "\n", to: &str)
         }
 
         guard let children = self.children, !children.isEmpty else { return }
+        
+        // If I am a Heading with a single Text Node then don't drill down
+        if includesChild { return }
         
         for (index, child) in children.enumerated() {
             let isLastChild = index == children.count - 1

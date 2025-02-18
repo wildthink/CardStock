@@ -298,12 +298,7 @@ public struct Markdownosaur: MarkupVisitor {
 
     mutating public func visitHeading(_ heading: Heading) -> RichText {
         var result = richText(for: heading.children)
-        result.mergeAttributes(design.attributes(forHeading: heading))
-        
-        if heading.hasSuccessor {
-            result += design.vspace(for: .section(index: heading.level))
-        }
-        
+        result.mergeAttributes(design.attributes(forHeading: heading))        
         return result
     }
     
@@ -414,12 +409,11 @@ public struct Markdownosaur: MarkupVisitor {
             let indent = String(repeating: "\t", count: item.listDepth)
             result.append(AttributedString("\(indent)\(prefix) "))
             result.append(visit(item))
-            result += design.vspace(for: .listItem)
+            if item.hasSuccessor {
+                result += design.vspace(for: .listItem)
+            }
         }
         result.paragraphStyle = design.paragraphStyle(for: list)
-//        if list.hasSuccessor {
-//        result += design.vspace(for: .paragraph)
-//        }
         return result
     }
     

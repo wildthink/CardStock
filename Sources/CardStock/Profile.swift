@@ -8,11 +8,29 @@
 import SwiftUI
 @preconcurrency import Markdown
 
-struct xText: View {
+struct xText: ModelView {
+    var model: AttributedString
+    
+    init(_ model: Model) {
+        self.model = model
+    }
+
     var body: some View {
-        Text("")
+        Text(model)
     }
 }
+
+//extension xText where Model == AttributedString {
+//    var body: some View {
+//        Text(model)
+//    }
+//}
+//
+//extension xText where Model == String {
+//    var body: some View {
+//        Text(model)
+//    }
+//}
 
 extension [AttributedString] {
     mutating func append(_ new: AttributedSubstring) {
@@ -36,53 +54,27 @@ struct ProfileView: ModelView {
     
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 0) {
                 layout(first: "hero")
-//                    .padding(48)
-                layout(first: "Caption")
-//                layout(first: "pitch")
+                    .frame(width: 200)
+                    .padding()
+                layout(first: "caption")
+//                layout(all: "section", axis: .vertical)
+                layout(first: "section")
+                layout(first: "section/text")
 
 //                layout(all: "section/heading", axis: .vertical)
 //                    .padding(48)
-                ForEach(model.links) {
-                    LinkView(model: $0)
+                VStack(alignment: .leading) {
+                    ForEach(model.links) {
+                        LinkView(model: $0)
+                    }
                 }
             }
         }
     }
 }
 
-//public extension XtDocument {
-//    
-//    func select(links xpath: String) -> [xLink] {
-//        tree
-//            .foreach()
-//            .matching(path: xpath)
-//            .compactMap({ $0 as? XMLMarkup })
-//            .compactMap(\.markup)
-//            .compactMap({ $0 as? Markdown.Link })
-//            .compactMap(xLink.init)
-//    }
-//
-//    func select(markup xpath: String) -> [XMLMarkup] {
-//        tree
-//            .foreach()
-//            .matching(path: xpath)
-//            .compactMap({ $0 as? XMLMarkup })
-//    }
-//}
-
-//func attributedString() -> AttributedString {
-//    var mdv = Markdownosaur()
-//    let nodes = nodes(forXPath: xPath)
-//        .compactMap(\.markup)
-//        .compactMap(fn)
-//    
-//    return nodes
-//    func fn(_ md: Markup) -> AttributedString {
-//        mdv.visit(md).str
-//    }
-//}
 
 public extension ModelView where Model == XtDocument {
 
@@ -139,14 +131,36 @@ public extension ModelView where Model == XtDocument {
                .background(Color.gray)
                .clipShape(Circle())
         } else {
-            Text(attr)
+            xText(attr)
         }
     }
 
 }
 
+#if canImport(AppKit)
+    func pbCopy(_ str: @autoclosure () -> String) {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(str(), forType: .string)
+    }
+#endif
+    
+#if canImport(UIKit)
+    func pbCopy(_ str: @autoclosure () -> String) {
+        let pb = UIPasteboard.general
+        pb.string = str()
+    }
+#endif
+
+//@ViewBuilder
+////func CopyButton(_ str: @autoclosure @escaping () -> String) -> some View {
+//    Button(action: { pbCopy(str()) }) {
+//        Image(systemName: "square.and.arrow.up")
+//    }
+//}
+               
 struct ContentView: View {
-    var doc: XtDocument = XtDocument(sampleMarkdown)
+    var doc: XtDocument = jason
 //    @State var mdp = Markdownosaur(baseSize: 8)
     let img = Image(systemName: "message.badge.filled.fill")
     let ns_img = NSImage(systemSymbolName: "message.badge.filled.fill", accessibilityDescription: nil)!
@@ -159,17 +173,37 @@ struct ContentView: View {
             }
             
             ScrollView {
-                Text(doc.tree.rootElement()!.format())
+                let str = doc.tree.rootElement()!.xmlString(options: .nodePrettyPrint)
+                Text(str)
                     .multilineTextAlignment(.leading)
                     .monospaced()
+                    .onTapGesture {_ in
+                        pbCopy(str)
+                    }
             }
             .tabItem {
                 Label("XML", systemImage: "doc")
             }
 
+            ScrollView {
+                let str = doc.tree.rootElement()!.format()
+               Text(str)
+                    .multilineTextAlignment(.leading)
+                    .monospaced()
+                    .onTapGesture {_ in
+                        pbCopy(str)
+                    }
+            }
+            .tabItem {
+                Label("XTree", systemImage: "doc")
+            }
+
             if let text = doc.data {
                 ScrollView {
                     Text(text)
+                        .onTapGesture {_ in
+                            pbCopy(text)
+                        }
                 }
                 .tabItem {
                     Label("Text", systemImage: "doc")
@@ -218,7 +252,7 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .frame(width: 400, height: 700)
+        .frame(width: 500, height: 700)
         .padding()
 }
 
@@ -255,6 +289,21 @@ let jason_md = """
 Here is where I say a little bit about myself.
 Perhaps, what I like to do for fun.
 Or anything else.
+
+##### Pitch Deck
+
+## Section 1
+Section one stuff
+
+### Section 1.1
+Some subsection stuff.
+Line two.
+
+## Section 2
+
+# Top Section
+
+
 """
 /*
 @comment{ links include linkedIn, github, instagram, etc }

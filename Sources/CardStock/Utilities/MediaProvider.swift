@@ -99,8 +99,8 @@ struct TableRow: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(height: size.height)
-            .clipped()
-            .cornerRadius(8)
+//            .background(ContainerRelativeShape())
+            .cornerRadius(5)
     }
     
     var body: some View {

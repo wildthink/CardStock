@@ -116,6 +116,11 @@ public struct XtMarkdownToXML: MarkupVisitor {
         return 0  // Default level when no heading is found
     }
     
+    public func visitParagraph(_ paragraph: Paragraph) -> () {
+        let node = XMLMarkup(markup: paragraph, name: "text")
+        top.addChild(node)
+    }
+    
     /**
         The @id BlockDirective is a special case used to addAttributes(...) to its parent XMLElement.
         Using this can reduce annoying nesting level management.
@@ -127,6 +132,7 @@ public struct XtMarkdownToXML: MarkupVisitor {
             let argv = node.argumentText.parseNameValueArguments()
             for arg in argv {
                 if arg.name.isEmpty {
+//                    xe.name = arg.value
                     xe.addAttribute(name: "id", value: arg.value)
                 } else {
                     xe.addAttribute(name: arg.name, value: arg.value)
@@ -138,6 +144,38 @@ public struct XtMarkdownToXML: MarkupVisitor {
         }
     }
 
+    /*
+     mutating public func visitBlockDirective(_ node: BlockDirective) -> Result {
+         let name = node.name.lowercased()
+         if name == "id" {
+ //            let xe = top
+ //            let node = node.detachedFromParent as! BlockDirective
+             let xe = XElement(instruction: node)
+
+             let argv = node.argumentText.parseNameValueArguments()
+             for arg in argv {
+                 if arg.name.isEmpty {
+                     xe.name = arg.value
+                     xe.addAttribute(name: "id", value: arg.value)
+                 } else {
+                     xe.addAttribute(name: arg.name, value: arg.value)
+                 }
+             }
+             // Replace the top with the new node
+             if let it = pop() {
+                 it.detach()
+                 xe.markup = it.markup
+                 xe.addChild(it)
+             }
+             push(xe)
+             
+         } else {
+             let xn = XElement(instruction: node)
+             top.addChild(xn)
+         }
+     }
+
+     */
     mutating public func visitHeading(_ heading: Heading) {
         let xn = XElement(markup: heading, name: "section")
         xn.markdownLevel = heading.level
@@ -208,59 +246,59 @@ extension XMLMarkup {
     }
 }
 
-let sampleMarkdown = """
-@meta(version: 1.2) {
-    key: v1
-    key2: v2
-}
-
-# Jason Jobe
-@hero {
-![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg)
-}
-
-@Caption {
-- Professional iOS Application Architect
-- Amateur Social Scientist
-- Tinker, Maker, Smith
-}
-
-@links {
-    [Gravatar](https://jasonjobe.link)
-    [](https://www.linkedin.com/in/jason-jobe-bb0b991/)
-    [](https://medium.com/@jasonjobe)
-    [](https://github.com/wildthink)
-    [](https://www.instagram.com/jmj_02021/)
-}
-
-#### Elevator Pitch
-@id(pitch, ax: b
-c 889)
-Here is where I say a little bit about myself.
-Perhaps, what I like to do for fun.
-Or anything else.
-
-## Section 1
-Section one stuff
-
-### Section 1.1
-Some subsection stuff.
-Line two.
-
-## Section 2
-
-# Top Section
-
-@lede {
-Professional iOS Application Architect
-Amateur Social Scientist
-Tinker, Maker, Smith
-}
-
-@comment{ links include linkedIn, github, instagram, etc }
-@place() {
-    @location(lat: 124, log: 456)
-Oakland, Maryland US
-}
-"""
-
+//let sampleMarkdown = """
+//@meta(version: 1.2) {
+//    key: v1
+//    key2: v2
+//}
+//
+//# Jason Jobe
+//@hero {
+//![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg)
+//}
+//
+//@Caption {
+//- Professional iOS Application Architect
+//- Amateur Social Scientist
+//- Tinker, Maker, Smith
+//}
+//
+//@links {
+//    [Gravatar](https://jasonjobe.link)
+//    [](https://www.linkedin.com/in/jason-jobe-bb0b991/)
+//    [](https://medium.com/@jasonjobe)
+//    [](https://github.com/wildthink)
+//    [](https://www.instagram.com/jmj_02021/)
+//}
+//
+//#### Elevator Pitch
+//@id(pitch, ax: b
+//c 889)
+//Here is where I say a little bit about myself.
+//Perhaps, what I like to do for fun.
+//Or anything else.
+//
+//## Section 1
+//Section one stuff
+//
+//### Section 1.1
+//Some subsection stuff.
+//Line two.
+//
+//## Section 2
+//
+//# Top Section
+//
+//@lede {
+//Professional iOS Application Architect
+//Amateur Social Scientist
+//Tinker, Maker, Smith
+//}
+//
+//@comment{ links include linkedIn, github, instagram, etc }
+//@place() {
+//    @location(lat: 124, log: 456)
+//Oakland, Maryland US
+//}
+//"""
+//

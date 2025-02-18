@@ -73,15 +73,21 @@ final class carbonTests: XCTestCase {
     
     func testXpath() {
         let doc = jason
-  
-//        let items = doc.tree
-//            .foreach()
-//            .matching(path: "/section/heading")
-//            
-//        for h1 in items {
-//            print(h1.format())
-//        }
         
+        let tx = doc
+            .select("section")
+            .nth(1)
+//            .cast(to: XMLMarkup.self)
+//            .map(trace)
+//            .map(\.string)
+//            .compactMap(\.markup)
+//            .nodes(ofType: Text.self)
+
+            print(tx)
+ 
+        let n1 = doc.select("caption")
+        n1.forEach({ print($0) })
+
         func trace<T>(_ v: T) -> T {
             print(String(describing: v))
             return v
@@ -91,21 +97,19 @@ final class carbonTests: XCTestCase {
 //        let xlinks = mlinks
             .compactMap(xLink.init)
         mlinks.forEach({ print($0) })
-
-        //select(links: "links")
         
-        let links = doc.tree
-            .foreach()
-            .lazy
-            .matching(path: "links")
-            .cast(to: XMLMarkup.self)
-            .compactMap(\.markup)
-            .nodes(ofType: Link.self)
-            .compactMap(xLink.init)
+//        let links = doc.tree
+//            .foreach()
+//            .lazy
+//            .matching(path: "links")
+//            .cast(to: XMLMarkup.self)
+//            .compactMap(\.markup)
+//            .nodes(ofType: Link.self)
+//            .compactMap(xLink.init)
+//        
+//
+//        links.forEach({ print($0) })
         
-
-        links.forEach({ print($0) })
-               
         print("fin", #function)
     }
     
@@ -214,7 +218,7 @@ extension Sequence {
 
 @preconcurrency import Markdown
 //let profileDoc: Document = Document(parsing: md, options: [.parseBlockDirectives])
-let jason = XtDocument(sampleMarkdown)
+//let jason = XtDocument(sampleMarkdown)
 
 //let md = """
 //@meta(version: 1.2) {

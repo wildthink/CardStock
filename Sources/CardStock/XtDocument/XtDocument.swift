@@ -235,11 +235,22 @@ public extension XtDocument {
         ofType mt: M.Type
     ) -> some Sequence<M> {
         tree.foreach()
+            .lazy
             .matching(path: select)
             .cast(to: XMLMarkup.self)
             .compactMap(\.markup)
             .nodes(ofType: M.self)
     }
+    
+    func select(
+        _ select: String
+    ) -> some Sequence<XMLMarkup> {
+        tree.foreach()
+            .lazy
+            .matching(path: select)
+            .cast(to: XMLMarkup.self)
+    }
+
 }
 
 // MARK: Sequence<Markdown> Extenstions
@@ -249,6 +260,7 @@ public extension XtDocument {
 //    }
 //}
 
+//public extension LazySequence where Elements.Element == XMLNode {
 public extension Sequence {
     
     func select<M: Markup>(

@@ -9,8 +9,15 @@ import Foundation
 
 //infix operator ~ : ComparisonPrecedence
 
-extension String {
-    func caseInsensitiveEqual(_ other: String) -> Bool {
+extension StringProtocol {
+    
+    func caseInsensitiveEqual(_ other: (any StringProtocol)?) -> Bool {
+        if let other {
+            caseInsensitiveCompare(other) == .orderedSame
+        } else { false }
+    }
+
+    func caseInsensitiveEqual(_ other: any StringProtocol) -> Bool {
         caseInsensitiveCompare(other) == .orderedSame
     }
     
