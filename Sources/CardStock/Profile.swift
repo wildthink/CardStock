@@ -60,8 +60,9 @@ struct ProfileView: ModelView {
                     .padding()
                 layout(first: "caption")
 //                layout(all: "section", axis: .vertical)
-                layout(first: "section")
+                layout(first: "section/heading")
                 layout(first: "section/text")
+                    .frame(maxWidth: 300)
 
 //                layout(all: "section/heading", axis: .vertical)
 //                    .padding(48)
@@ -265,13 +266,14 @@ let jason_md = """
     baseURL: https://wildthink.com/apps/jason
 }
 
-# Jason
 @hero {
 ![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg)
 }
 
-@Caption {
-- Professional iOS Application Architect
+# **Jason**
+
+@caption {
+- iOS Application Architect
 - Amateur Social Scientist
 - Tinker, Maker, Smith
 }

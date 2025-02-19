@@ -24,6 +24,10 @@ let package = Package(
             name: "CardStock",
             dependencies: [
                 .product(name: "Markdown", package: "swift-markdown"),
+            ],
+            resources: [
+                .process("Resources/Media.xcassets"),
+                .process("Resources/Icons.xcassets"),
             ]
         ),
         .testTarget(

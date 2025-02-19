@@ -172,6 +172,20 @@ final class carbonTests: XCTestCase {
         print("foo ~ foo", "foo" ~ "foo")
         print("foo ~ foO", "foo" ~ "foO")
     }
+    
+    func testGetDomain() {
+        let host: String? = "www.example.com"
+        guard let host else { return }
+        let list = host.split(separator: ".")
+        let it = list.count >= 2 ? list[list.count - 2] : ""
+        print (it)
+        
+//        let p1 = Bundle.module.path(forResource: "globe", ofType: nil)
+//        let p2 = Bundle.module.path(forResource: "Resources/linkedin", ofType: nil)
+//        let p3 = Bundle.module.urlForImageResource("linkedin")
+//        print("Bundle", Bundle.module.bundlePath)
+//        print(p1, p2, p3)
+    }
 }
 
 

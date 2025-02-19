@@ -21,12 +21,16 @@ public struct xLink: Identifiable {
     public var id: Int { url.absoluteString.hashValue }
     public var label: String
     public var url: URL
-    public var customIcon: SwiftUI.Image?
-    
-    public var icon: SwiftUI.Image {
-        customIcon ??
-            .init(systemName: commonFavicon ?? defaultIcon)
+    public var imageName: String {
+        _imageName ?? commonFavicon ?? defaultIcon
     }
+    var _imageName: String?
+//    public var customIcon: SwiftUI.Image?
+    
+//    public var icon: SwiftUI.Image {
+//        customIcon ??
+//            .init(systemName: commonFavicon ?? defaultIcon)
+//    }
 }
 
 public extension xLink {
@@ -37,7 +41,7 @@ public extension xLink {
         else { return nil }
         self.url = url
         self.label = link.title ?? url.host ?? urlString
-        self.customIcon = nil
+        self._imageName = nil
     }
 
     init?(_ link: Markdown.Link) {
@@ -46,7 +50,7 @@ public extension xLink {
         else { return nil }
         self.url = url
         self.label = link.title ?? url.host ?? urlString
-        self.customIcon = nil
+        self._imageName = nil
     }
 }
 
@@ -64,40 +68,50 @@ public extension xLink {
     }
     
     var commonFavicon: String? {
-        switch url.host {
-        case "apple.com":
-            "apple.logo"
-        default:
-             nil
-        }
+        guard let host = url.host else { return nil }
+        let list = host.split(separator: ".")
+        return list.count >= 2 ? String(list[list.count - 2]) : nil
+    }
+}
+
+extension URL {
+    var commonFavicon: String? {
+        guard let host = host else { return nil }
+        return host
+//        let list = host.split(separator: ".")
+//        return list.count >= 2 ? String(list[list.count - 2]) : nil
     }
 }
 
 public struct LinkView: View {
-    public enum Style { case iconOnly, iconAndLabel, labelOnly }
+//    public enum Style { case iconOnly, iconAndLabel, labelOnly }
     public var model: xLink
-    public var style: Style = .iconAndLabel
+//    public var style: Style = .iconAndLabel
     @Environment(\.openURL) var openURL
     
     public var body: some View {
-        Group {
-            switch style {
-            case .iconOnly:
-                model.icon.resizable()
-                    .frame(width: 16, height: 16)
-            case .iconAndLabel:
-                HStack(alignment: .center) {
-                    model.icon.resizable()
-                        .frame(width: 16, height: 16)
-                    Text(model.label)
-                }
-            case .labelOnly:
-                Text(model.label)
-            }
+        LabeledContent(model.label) {
+            Image(model.imageName, bundle: .module)
+                .resizable()
+                .frame(width: 24, height: 24)
         }
         .contentShape(.rect)
         .onTapGesture {
+            let p1 = Bundle.module.path(forResource: "globe", ofType: nil)
+            let p2 = Bundle.module.path(forResource: "Resources/linkedin", ofType: nil)
+            let p3 = Bundle.module.urlForImageResource("linkedin")
+            print("Bundle", Bundle.module.bundlePath)
+            print(p1, p2, p3)
+
+            print("openURL", model.url, model.url.commonFavicon)
             openURL(model.url)
         }
+    }
+    
+    var icon: some View {
+        let img = Image(model.imageName, bundle: .module)
+        return img
+            .resizable()
+            .frame(width: 24, height: 24)
     }
 }
