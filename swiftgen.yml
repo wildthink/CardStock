@@ -1,0 +1,7 @@
+xcassets:
+  inputs:
+    - Sources/CardStock/Resources/Icons.xcassets
+    - Sources/CardStock/Resources/Media.xcassets
+  outputs:
+    - templateName: swift5
+      output: Sources/CardStock/Generated/Assets.swift

@@ -53,6 +53,10 @@ supporting views.
 - [ ] Bibliographic Citation
 - [ ] [ArXiv Paper](https://en.wikipedia.org/wiki/ArXiv)
 
+### SwiftGen Assets
+See swiftgen.yml
+https://github.com/SwiftGen/SwiftGen/blob/stable/Documentation/ConfigFile.md
+
 ### Resources
 
 - [Why Cards are the Future of the Web](https://blog.intercom.io/why-cards-are-the-future-of-the-web/)

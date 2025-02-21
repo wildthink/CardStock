@@ -11,7 +11,9 @@ import Foundation
 import SwiftUI
 import Markdown
 
+#if os(macOS)
 extension NSFont: @unchecked @retroactive Sendable {}
+#endif
 
 enum TextBreak {
     case none
@@ -119,6 +121,9 @@ struct StringDesign: Sendable {
         var container = AttributeContainer()
 //        container.merge(self.container) stack??
         container.font = .systemFont(ofSize: typography.fontSize(forHeading: heading.level))
+        container.font = .largeTitle
+//        container.foregroundColor = .white
+//        container.backgroundColor = .red
         return container
     }
         
@@ -145,7 +150,7 @@ struct StringDesign: Sendable {
             txt.underlineStyle = .double
         case .strikethrough:
             txt.strikethroughStyle = .single
-            txt.strikethroughColor = .controlAccentColor
+//            txt.strikethroughColor = .controlAccentColor
         case .code:
             txt.foregroundColor = .systemGray
             txt.font = .monospacedSystemFont(ofSize: baseFontSize, weight: .regular)
@@ -298,7 +303,7 @@ public struct Markdownosaur: MarkupVisitor {
 
     mutating public func visitHeading(_ heading: Heading) -> RichText {
         var result = richText(for: heading.children)
-        result.mergeAttributes(design.attributes(forHeading: heading))        
+        result.mergeAttributes(design.attributes(forHeading: heading))
         return result
     }
     

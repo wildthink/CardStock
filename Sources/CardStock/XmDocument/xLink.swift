@@ -77,41 +77,34 @@ public extension xLink {
 extension URL {
     var commonFavicon: String? {
         guard let host = host else { return nil }
-        return host
-//        let list = host.split(separator: ".")
-//        return list.count >= 2 ? String(list[list.count - 2]) : nil
+        let list = host.split(separator: ".")
+        return list.count >= 2 ? String(list[list.count - 2]) : nil
     }
 }
 
 public struct LinkView: View {
-//    public enum Style { case iconOnly, iconAndLabel, labelOnly }
-    public var model: xLink
-//    public var style: Style = .iconAndLabel
     @Environment(\.openURL) var openURL
+    public var model: xLink
     
     public var body: some View {
         LabeledContent(model.label) {
-            Image(model.imageName, bundle: .module)
-                .resizable()
-                .frame(width: 24, height: 24)
+            icon
+                .frame(maxWidth: 24)
         }
         .contentShape(.rect)
         .onTapGesture {
-            let p1 = Bundle.module.path(forResource: "globe", ofType: nil)
-            let p2 = Bundle.module.path(forResource: "Resources/linkedin", ofType: nil)
-            let p3 = Bundle.module.urlForImageResource("linkedin")
-            print("Bundle", Bundle.module.bundlePath)
-            print(p1, p2, p3)
-
-            print("openURL", model.url, model.url.commonFavicon)
             openURL(model.url)
         }
     }
     
+    @ViewBuilder
     var icon: some View {
-        let img = Image(model.imageName, bundle: .module)
-        return img
+        if let img = Image(qname: model.imageName, bundle: .module)
+            ?? Image(qname: model.defaultIcon, bundle: .module) {
+            img
             .resizable()
-            .frame(width: 24, height: 24)
+            .aspectRatio(contentMode: .fit)
+//            .frame(width: 24, height: 24)
+        }
     }
 }
