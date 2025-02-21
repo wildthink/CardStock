@@ -50,7 +50,7 @@ public protocol ModelView<Model>: View where Model: Hashable {
 }
 
 struct ProfileView: ModelView {
-    var model: XtDocument = jason
+    var model: XmDocument = jason
     
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -69,6 +69,7 @@ struct ProfileView: ModelView {
                 VStack(alignment: .leading) {
                     ForEach(model.links) {
                         LinkView(model: $0)
+//                            .border(.red)
                     }
                 }
             }
@@ -77,7 +78,7 @@ struct ProfileView: ModelView {
 }
 
 
-public extension ModelView where Model == XtDocument {
+public extension ModelView where Model == XmDocument {
 
     @ViewBuilder
     func layout(first xpath: String) -> some View {
@@ -130,7 +131,7 @@ public extension ModelView where Model == XtDocument {
                    ProgressView()
                }
                .background(Color.gray)
-               .clipShape(Circle())
+               .clipShape(.rect(cornerRadius: 8))
         } else {
             xText(attr)
         }
@@ -159,12 +160,34 @@ public extension ModelView where Model == XtDocument {
 //        Image(systemName: "square.and.arrow.up")
 //    }
 //}
-               
+
+extension SwiftUI.Image {
+    init?(qname: String, bundle: Bundle? = nil) {
+        #if os(macOS)
+        let img =
+                NSImage(systemSymbolName: qname, accessibilityDescription: nil)
+                ?? NSImage(named: qname)
+        if let img {
+            self = Image(nsImage: img)
+        } else {
+            self = Image(qname, bundle: bundle)
+        }
+        #else
+        if let img =
+            UIImage(systemName: qname) {
+            self = Image(uiImage: img)
+        } else {
+            self = Image(qname, bundle: bundle)
+        }
+        #endif
+    }
+}
+
 struct ContentView: View {
-    var doc: XtDocument = jason
+    var doc: XmDocument = jason
 //    @State var mdp = Markdownosaur(baseSize: 8)
-    let img = Image(systemName: "message.badge.filled.fill")
-    let ns_img = NSImage(systemSymbolName: "message.badge.filled.fill", accessibilityDescription: nil)!
+    let img = Image(qname: "message.badge.filled.fill")
+//    let ns_img = NSImage(systemSymbolName: "message.badge.filled.fill", accessibilityDescription: nil)!
     
     var body: some View {
         TabView {
@@ -174,7 +197,8 @@ struct ContentView: View {
             }
             
             ScrollView {
-                let str = doc.tree.rootElement()!.xmlString(options: .nodePrettyPrint)
+//                let str = doc.tree.rootElement()!.xmlString(options: .nodePrettyPrint)
+                let str = doc.tree.xml
                 Text(str)
                     .multilineTextAlignment(.leading)
                     .monospaced()
@@ -187,7 +211,8 @@ struct ContentView: View {
             }
 
             ScrollView {
-                let str = doc.tree.rootElement()!.format()
+//                let str = doc.tree.rootElement()!.format()
+                let str = doc.tree.format()
                Text(str)
                     .multilineTextAlignment(.leading)
                     .monospaced()
@@ -225,22 +250,22 @@ struct ContentView: View {
     }
     
     
-    var parts: [(offset: Int, element: AttributedString)] {
-        let it = Array(partition().enumerated())
-        return it
-    }
+//    var parts: [(offset: Int, element: AttributedString)] {
+//        let it = Array(partition().enumerated())
+//        return it
+//    }
 
-    func partition() -> [AttributedString] {
-//        let str = mdp.attributedString(from: doc)
-        let str = doc.attributedString()
-//        var new = str
-//        let nl = AttributedString("\n")
-        var parts: [AttributedString] = []
-        for (_, range) in str.runs[\.imageURL] {
-            parts.append(str[range])
-        }
-        return parts
-    }
+//    func partition() -> [AttributedString] {
+////        let str = mdp.attributedString(from: doc)
+//        let str = doc.attributedString()
+////        var new = str
+////        let nl = AttributedString("\n")
+//        var parts: [AttributedString] = []
+//        for (_, range) in str.runs[\.imageURL] {
+//            parts.append(str[range])
+//        }
+//        return parts
+//    }
 
 }
 
@@ -253,13 +278,13 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .frame(width: 500, height: 700)
+//        .frame(width: 500, height: 700)
         .padding()
 }
 
 //let jason: Document = Document(parsing: jason_md,options: [.parseBlockDirectives])
 
-let jason = XtDocument(jason_md)
+let jason = XmDocument(jason_md)
 
 let jason_md = """
 @meta {
@@ -271,6 +296,8 @@ let jason_md = """
 }
 
 # **Jason**
+@profile(aka: jason, tags: [pro, public])
+@index(hints_column: swift)
 
 @caption {
 - iOS Application Architect

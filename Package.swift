@@ -15,6 +15,7 @@ let package = Package(
             targets: ["CardStock"]),
     ],
     dependencies: [
+        .package(path: "/Users/jason/dev/ThirdParty/AEXML"),
         .package(url: "https://github.com/swiftlang/swift-markdown.git", branch: "main"),
     ],
     targets: [
@@ -24,6 +25,7 @@ let package = Package(
             name: "CardStock",
             dependencies: [
                 .product(name: "Markdown", package: "swift-markdown"),
+                .product(name: "AEXML", package: "AEXML"),
             ],
             resources: [
                 .process("Resources/Media.xcassets"),

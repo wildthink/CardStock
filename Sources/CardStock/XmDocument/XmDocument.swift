@@ -5,10 +5,11 @@
 //  Created by Jason Jobe on 2/8/25.
 //
 
-import Foundation
+import AEXML
+public typealias XMLDocument = AEXMLDocument
 @preconcurrency import Markdown
 
-public final class XtDocument: @unchecked Sendable {
+public final class XmDocument: @unchecked Sendable {
     let document: Document
     let tree: XMLDocument
     let data: String?
@@ -16,28 +17,29 @@ public final class XtDocument: @unchecked Sendable {
     init (_ data: String) {
         self.data = data
         let doc = Document(parsing: data, options: [.parseBlockDirectives])
-        tree = XtMarkdownToXML.read(doc)
+        tree = XmMarkdownToXML.read(doc)
         document = doc
     }
 }
 
-extension XtDocument: Hashable {
+extension XmDocument: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(ObjectIdentifier(self))
         hasher.combine(ObjectIdentifier(tree))
         hasher.combine(data?.hashValue ?? 0)
     }
     
-    public static func == (lhs: XtDocument, rhs: XtDocument) -> Bool {
+    public static func == (lhs: XmDocument, rhs: XmDocument) -> Bool {
         return ObjectIdentifier(lhs) == ObjectIdentifier(rhs)
     }
 }
 
 extension XMLDocument {
     func formatted() -> String {
-        let data = xmlData(options: .nodePrettyPrint)
-        let str:String? = String(data: data, encoding: .utf8)
-        return str ?? "<XML Document>"
+        self.xml
+//        let data = xmlData(options: .nodePrettyPrint)
+//        let str:String? = String(data: data, encoding: .utf8)
+//        return str ?? "<XML Document>"
     }
 }
 
@@ -53,7 +55,7 @@ extension XMLNode {
     
     func nodes(matching path: [PathComponent]) -> [XMLNode] {
         var result: [XMLNode] = []
-        nodes(matching: path[0...], into: &result)
+//        nodes(matching: path[0...], into: &result)
         return result
     }
 
@@ -85,46 +87,46 @@ extension XMLNode {
 //        }
 //    }
     
-    func nodes(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
-        guard let cond = path.first else {
-            list.append(self)
-            return
-        }
-        let tail = path.dropFirst()
-        
-        switch cond {
-        case .tag(let tagName):
-            let kids = children?.filter { $0.name == tagName } ?? []
-            nodes(matching: tail, into: &list)
-            case .index(let idx):
-            if idx == index {
-                
-            }
-            case .condition(let predicate):
-            if predicate(self) {
-                nodes(matching: tail, into: &list)
-            }
-            case .anyone:
-                children?.forEach {
-                    $0.nodes(matching: tail, into: &list)
-                }
-            case .anypath:
-                decendents(matching: tail, into: &list)
-        }
-     }
-
-    func decendents(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
-        guard let children, !path.isEmpty else { return }
-        for child in children {
-            child.decendents(matching: path, into: &list)
-//            child.children?.forEach {
-            child.nodes(matching: path, into: &list)
+//    func nodes(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
+//        guard let cond = path.first else {
+//            list.append(self)
+//            return
+//        }
+//        let tail = path.dropFirst()
+//        
+//        switch cond {
+//        case .tag(let tagName):
+//            let kids = children?.filter { $0.name == tagName } ?? []
+//            nodes(matching: tail, into: &list)
+//            case .index(let idx):
+//            if idx == index {
+//                
 //            }
-        }
-    }
+//            case .condition(let predicate):
+//            if predicate(self) {
+//                nodes(matching: tail, into: &list)
+//            }
+//            case .anyone:
+//                children?.forEach {
+//                    $0.nodes(matching: tail, into: &list)
+//                }
+//            case .anypath:
+//                decendents(matching: tail, into: &list)
+//        }
+//     }
+
+//    func decendents(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
+//        guard let children, !path.isEmpty else { return }
+//        for child in children {
+//            child.decendents(matching: path, into: &list)
+////            child.children?.forEach {
+//            child.nodes(matching: path, into: &list)
+////            }
+//        }
+//    }
 }
 
-extension XtDocument {
+extension XmDocument {
     
 //    func nodes(forXPath xPath: String) -> [XMLMarkup] {
 //        let ns = try? tree.nodes(forXPath: xPath)
@@ -161,11 +163,11 @@ extension XtDocument {
 //            mdv.visit(md).str
 //        }
 //    }
-
-    func attributedString() -> AttributedString {
-        var md = Markdownosaur()
-        return md.attributedString(from: document)
-    }
+//
+//    func attributedString() -> AttributedString {
+//        var md = Markdownosaur()
+//        return md.attributedString(from: document)
+//    }
 }
 
 struct GetNodes<M: Markup>: MarkupVisitor {
@@ -217,18 +219,18 @@ struct MarkdownVisitor<Element>: MarkupVisitor {
     }
 }
 
-public extension XtDocument {
+public extension XmDocument {
 }
 
-extension XtMarkdownToXML {
+extension XmMarkdownToXML {
     static func read(_ document: Document) -> XMLDocument {
-        var reader = XtMarkdownToXML()
+        var reader = XmMarkdownToXML()
         reader.visit(document)
-        return XMLDocument(rootElement: reader.tree)
+        return XMLDocument(root: reader.tree)
     }
 }
 
-public extension XtDocument {
+public extension XmDocument {
     
     func select<M: Markup>(
         _ select: String,

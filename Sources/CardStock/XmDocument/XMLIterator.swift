@@ -5,7 +5,9 @@
 //  Created by Jason Jobe on 2/15/25.
 //
 
-import Foundation
+import AEXML
+
+public typealias XMLNode = AEXMLElement
 
 public extension XMLNode {
 
@@ -19,7 +21,7 @@ public extension XMLNode {
     }
     
     func matches(path: ArraySlice<String.SubSequence>) -> Bool {
-        let name = self.name ?? ""
+        let name = self.name
         guard let key = path.last, name.caseInsensitiveEqual(key)
         else { return false }
 
@@ -36,7 +38,7 @@ public struct XMLIterator: IteratorProtocol, Sequence {
     private var prune: ((XMLNode) -> Bool)?
     
     public init(_ parent: XMLNode) {
-        queue = parent.children ?? []
+        queue = parent.children
     }
 
     public init(_ nodes: [XMLNode]) {
@@ -103,6 +105,14 @@ public extension Sequence {
 
 public extension XMLNode {
     
+    var stringValue: String? { value }
+    
+    func child(at ndx: Int) -> XMLNode? {
+        guard ndx >= 0, ndx < children.count
+        else { return nil }
+        return children[ndx]
+    }
+    
     func format() -> String {
         var str = ""
         self.format(to: &str)
@@ -110,10 +120,10 @@ public extension XMLNode {
     }
 
     var formattedName: (name: String, includesChild: Bool) {
-        let tag = self.name ?? self.stringValue ?? "(null)"
+        let tag = self.name // ?? self.stringValue ?? "(null)"
         
         return if let tch = child(at: 0),
-                    tch.kind == .text,
+//                    tch.kind == .text,
                     let txt = tch.stringValue
         {
             ("\(tag) '\(txt)'", true)
@@ -135,7 +145,7 @@ public extension XMLNode {
             Swift.print(prefix, connector, name, separator: "", terminator: "\n", to: &str)
         }
 
-        guard let children = self.children, !children.isEmpty else { return }
+//        guard let children = self.children, !children.isEmpty else { return }
         
         // If I am a Heading with a single Text Node then don't drill down
         if includesChild { return }

@@ -20,6 +20,28 @@ public struct Proportio: Sendable {
     }
 }
 
+public extension DynamicTypeSize {
+
+    init(name: String) {
+        self = switch name {
+        case "xSmall": .xSmall
+        case "small": .small
+        case "medium": .medium
+        case "large": .large
+        case "xLarge": .xLarge
+        case "xxLarge": .xxLarge
+        case "xxxLarge": .xxxLarge
+        case "accessibility1": .accessibility1
+        case "accessibility2": .accessibility2
+        case "accessibility3": .accessibility3
+        case "accessibility4": .accessibility4
+        case "accessibility5": .accessibility5
+        default:
+                .medium
+        }
+    }
+}
+
 public struct Typography: Sendable {
     
     public var typographyScale: FontScale = .perfectFourth

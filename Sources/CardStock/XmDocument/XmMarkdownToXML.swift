@@ -5,7 +5,9 @@
 //  Created by Jason Jobe on 2/10/25.
 //
 import Foundation
+import AEXML
 import Markdown
+public typealias XMLElement = AEXMLElement
 
 @dynamicMemberLookup
 struct BlackBox<Item>: CustomStringConvertible {
@@ -37,11 +39,11 @@ open class XMLMarkup: XMLElement {
     public var range: SourceRange? { markup?.range }
     public var source: SourceLocation? { range?.lowerBound }
     
-    public override init(name: String, uri URI: String? = nil) {
-        super.init(name: name, uri: URI)
-        self.uri = URI
-        self.name = name
-    }
+//    public override init(name: String, uri URI: String? = nil) {
+//        super.init(name: name, uri: URI)
+//        self.uri = URI
+//        self.name = name
+//    }
     
     public convenience init(markup: any Markup, name: String) {
         self.init(name: name)
@@ -59,19 +61,27 @@ open class XMLMarkup: XMLElement {
 extension XMLElement {
     func addAttribute(name: String, value: Any) {
         let sv = String(describing: value)
-        addAttribute(XMLNode.attribute(withName: name, stringValue: sv) as! XMLNode)
+        self.attributes[name] = sv
+//        addAttribute(XMLNode.attribute(withName: name, stringValue: sv) as! XMLNode)
     }
 }
 
 public extension XMLMarkup {
-    var attributedString: AttributedString? {
+    func typeset(baseSize: CGFloat = 14) -> AttributedString? {
         guard let markup else { return nil }
-        var reader = Markdownosaur()
+        var reader = Markdownosaur(baseSize: baseSize)
         return reader.visit(markup).str
+    }
+    
+    var attributedString: AttributedString? {
+        typeset(baseSize: 14)
+//        guard let markup else { return nil }
+//        var reader = Markdownosaur()
+//        return reader.visit(markup).str
     }
 }
 
-public struct XtMarkdownToXML: MarkupVisitor {
+public struct XmMarkdownToXML: MarkupVisitor {
     public typealias Result = ()
     typealias Node = any Markup
     typealias XElement = XMLMarkup
@@ -109,8 +119,9 @@ public struct XtMarkdownToXML: MarkupVisitor {
     func currentHeadingLevel() -> Int {
         // Traverse the stack from the top, searching for the most recent heading node
         for element in stack.reversed() {
-            if element.kind == .element {  // Assuming .element indicates a heading
-                return element.markdownLevel
+//            if element.kind == .element {
+            if let xm = element as? XMLMarkup {
+                return xm.markdownLevel
             }
         }
         return 0  // Default level when no heading is found
@@ -182,14 +193,15 @@ public struct XtMarkdownToXML: MarkupVisitor {
 
         let title = XElement(markup: heading, name: "heading")
         title.addAttribute(name: "level", value: heading.level)
-        title.stringValue = heading.plainText
+        title.value = heading.plainText
         xn.addChild(title)
         
         // Pop elements until we find a proper parent
         while let top = stack.last, top.markdownLevel >= heading.level {
             pop()
         }
-        if let ndxp = top.attribute(forName: "mdl")?.stringValue {
+//        if let ndxp = top.attribute(forName: "mdl")?.stringValue {
+        if let ndxp = top["mdl"].value {
             xn.addAttribute(name: "mdl", value: "\(ndxp).\(heading.level)")
         } else {
             xn.addAttribute(name: "mdl", value: heading.level)
@@ -234,11 +246,15 @@ public extension Markup {
     }
 }
 
+extension AEXMLElement {
+    var level: Int { 1 + (parent?.level ?? 0) }
+}
+
 extension XMLMarkup {
     func print(_ indent: Int = 0) {
         let pad = String(repeating: " ", count: indent)
-        Swift.print(pad, level, ":", markdownLevel, name ?? "<name>")
-        guard let children else { return }
+        Swift.print(pad, level, ":", markdownLevel, name)
+//        guard let children else { return }
         for child in children where child is XMLMarkup {
             guard let child = child as? XMLMarkup else { continue }
             child.print(indent + 2)
