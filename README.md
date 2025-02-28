@@ -67,3 +67,7 @@ https://uxdesign.cc/8-best-practices-for-ui-card-design-898f45bb60cc
 AttributedString: Making Text More Beautiful Than Ever
 https://fatbobman.com/en/posts/attributedstring/
 
+Why Your Cards Need a Footer for Metadata
+Data design for faster scanning
+https://uxmovement.medium.com/why-your-cards-need-a-footer-for-metadata-c0a19cc5154d
+

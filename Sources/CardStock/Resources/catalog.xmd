@@ -1,0 +1,44 @@
+@meta {
+    baseURL: https://wildthink.com/apps/jason
+}
+
+@profile(aka: jason, tag: preview, tag: public) {
+
+# Jason
+
+@avatar { ![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg) }
+
+@index(hints_column: swift)
+
+@caption {
+    ```
+    iOS Application Architect
+    Amateur Social Scientist
+    Tinker, Maker, Smith
+    ```
+}
+
+@links {
+    [Gravatar](https://jasonjobe.link)
+    [](https://www.linkedin.com/in/jason-jobe-bb0b991/)
+    [](https://medium.com/@jasonjobe)
+    [](https://github.com/wildthink)
+    [](https://www.instagram.com/jmj_02021/)
+    [Work](tel:13015551234)
+}
+
+@pitch {
+    Here is where I say a little bit about myself.
+    Perhaps, what I like to do for fun.
+    Or anything else.
+}
+
+}
+
+
+@place(
+    aka: [oakland, hometown]
+    geo: 39.41693° N, 79.40024° W
+) {
+    Oakland, MD
+}

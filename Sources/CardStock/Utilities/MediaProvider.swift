@@ -27,7 +27,12 @@ public extension MediaProvider {
         }
     }
 
-    static let sample = """
+    static let sample =
+    """
+    You can almost feel the calming sea breeze and the refreshing ocean mist as you take in the wonder of the vast Pacific Ocean.
+    """
+
+    static let long = """
     You can almost feel the calming sea breeze and the refreshing 
     ocean mist as you take in the wonder of the vast Pacific Ocean.
     The perfect collection of videos for those that feel the call 
@@ -56,20 +61,24 @@ struct MediaView_Previews: PreviewProvider {
             }
 //                .border(.red)
 
-            TableRow(card: .preview)
+            CardTableRow(card: .preview)
         }
         .frame(height: 600)
         .padding(20)
     }
 }
 
-struct Card: Identifiable {
+struct Card: Identifiable, Codable {
     var id: Int64
     var title: String
     var subtitle: String?
     var hero: String?
     var body: String?
 }
+
+//extension Card: Transferable {    
+//    
+//}
 
 extension Card {
     static let preview: Card = Card(
@@ -89,7 +98,7 @@ extension Card {
 }
 
 
-struct TableRow: View {
+struct CardTableRow: View {
     var card: Card
     @State var size: CGSize = .zero
     

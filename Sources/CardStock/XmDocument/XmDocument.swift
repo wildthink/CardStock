@@ -241,7 +241,7 @@ public extension XmDocument {
             .matching(path: select)
             .cast(to: XMLMarkup.self)
             .compactMap(\.markup)
-            .nodes(ofType: M.self)
+            .descendents(ofType: M.self)
     }
     
     func select(
@@ -277,19 +277,22 @@ public extension Sequence {
                 .matching(path: select)
                 .cast(to: XMLMarkup.self)
                 .compactMap(\.markup)
-                .nodes(ofType: M.self)
+                .descendents(ofType: M.self)
             results.append(contentsOf: nodes)
         }
         return results
     }
     
-    func nodes<M: Markup>(ofType mt: M.Type) -> [M]
-    where Element: Markup {
-        var visitor = GetNodes<M>()
-        self.forEach({ visitor.visit($0) })
-        return visitor.nodes
+    func descendents<M: Markup>(ofType mt: M.Type) -> some Sequence<M>
+    where Element == any Markup {
+        flatMap({ MarkupInterator($0).compactMap { $0 as? M } })
+
+//        self.compactMap({ MarkupInterator($0).filter({ $0 is M }) })
+//        var visitor = GetNodes<M>()
+//        self.forEach({ visitor.visit($0) })
+//        return visitor.nodes
     }
-    
+    /*
     func nodes<M: Markup>(ofType mt: M.Type) -> [M]
     where Element == (any Markup)? {
         var visitor = GetNodes<M>()
@@ -299,6 +302,35 @@ public extension Sequence {
         }
         return visitor.nodes
     }
+     */
 }
 
 extension MarkupChildren.Iterator: @retroactive Sequence { }
+
+
+public struct MarkupInterator: IteratorProtocol, Sequence {
+    public typealias Element = Markup
+    private var queue: [Element]
+    private var prune: ((Element) -> Bool)?
+    
+    public init(_ parent: Element) {
+        queue = Array(parent.children)
+    }
+
+    mutating func enqueue(_ nodes: MarkupChildren?) {
+        guard let nodes else { return }
+        if let prune = prune {
+            queue.append(contentsOf: nodes.filter(prune))
+        } else {
+            queue.append(contentsOf: nodes)
+        }
+    }
+    
+    public mutating func next() -> Element? {
+        guard !queue.isEmpty else { return nil }
+        
+        let node = queue.removeFirst()
+        enqueue(node.children)
+        return node
+    }
+}

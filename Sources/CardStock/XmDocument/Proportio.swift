@@ -107,9 +107,9 @@ struct ProportioView: View {
             component
             container(gap: pad, Text(
         """
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-        Maecenas non nisl ac dui gravida pellentesque. Phasellus
-        et cursus dui, at fringilla risus. Vestibulum a tortor 
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. \
+        Maecenas non nisl ac dui gravida pellentesque. Phasellus \
+        et cursus dui, at fringilla risus. Vestibulum a tortor \
         euismod, fermentum tortor sed, euismod turpis.
         """)
             )

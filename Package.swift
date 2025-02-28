@@ -15,7 +15,8 @@ let package = Package(
             targets: ["CardStock"]),
     ],
     dependencies: [
-        .package(path: "/Users/jason/dev/ThirdParty/AEXML"),
+//        .package(path: "/Users/jason/dev/ThirdParty/AEXML"),
+        .package(url: "https://github.com/wildthink/AEXML", branch: "main"),
         .package(url: "https://github.com/swiftlang/swift-markdown.git", branch: "main"),
     ],
     targets: [

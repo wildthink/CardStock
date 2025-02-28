@@ -1,6 +1,15 @@
 {
-  "originHash" : "bf2b2c1970a6f37eb3a7d8d4e8fbd32ef3bec076b48c190b76aa25b7f3bad267",
+  "originHash" : "6e5a718b67ddc0bc0ade006598998865814ca1914584d2cde097a501d2b20cd6",
   "pins" : [
+    {
+      "identity" : "aexml",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/wildthink/AEXML",
+      "state" : {
+        "branch" : "main",
+        "revision" : "56d7883be85b5424fbc55a5c9bf85f5584e9f0b1"
+      }
+    },
     {
       "identity" : "swift-cmark",
       "kind" : "remoteSourceControl",
