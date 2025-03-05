@@ -7,9 +7,9 @@
 
 import AEXML
 
-public typealias XMLNode = AEXMLElement
+public typealias XmElement = AEXMLElement
 
-public extension XMLNode {
+public extension XmElement {
 
     func foreach() -> XMLIterator {
         XMLIterator(self)
@@ -33,19 +33,19 @@ public extension XMLNode {
 }
 
 public struct XMLIterator: IteratorProtocol, Sequence {
-    public typealias Element = XMLNode
-    private var queue: [XMLNode]
-    private var prune: ((XMLNode) -> Bool)?
+    public typealias Element = XmElement
+    private var queue: [XmElement]
+    private var prune: ((XmElement) -> Bool)?
     
-    public init(_ parent: XMLNode) {
+    public init(_ parent: XmElement) {
         queue = parent.children
     }
 
-    public init(_ nodes: [XMLNode]) {
+    public init(_ nodes: [XmElement]) {
         queue = nodes
     }
 
-    mutating func enqueue(_ nodes: [XMLNode]?) {
+    mutating func enqueue(_ nodes: [XmElement]?) {
         guard let nodes else { return }
         if let prune = prune {
             queue.append(contentsOf: nodes.filter(prune))
@@ -54,7 +54,7 @@ public struct XMLIterator: IteratorProtocol, Sequence {
         }
     }
     
-    public mutating func next() -> XMLNode? {
+    public mutating func next() -> XmElement? {
         guard !queue.isEmpty else { return nil }
         
         let node = queue.removeFirst()
@@ -64,7 +64,7 @@ public struct XMLIterator: IteratorProtocol, Sequence {
 }
 
 // MARK: Sequence<XMLNode> Extenstions
-public extension LazySequence where Elements.Element == XMLNode {
+public extension LazySequence where Elements.Element == XmElement {
     func nodes(named name: String) -> LazyFilterSequence<Elements> {
         return self.filter { name.caseInsensitiveEqual($0.name) }
     }
@@ -74,7 +74,7 @@ public extension LazySequence where Elements.Element == XMLNode {
 //    }
 }
 
-public extension Sequence where Element == XMLNode {
+public extension Sequence where Element == XmElement {
     func nodes(named name: String) -> [Element] {
         filter { name.caseInsensitiveEqual($0.name) }
     }
@@ -103,11 +103,11 @@ public extension Sequence {
     }
 }
 
-public extension XMLNode {
+public extension XmElement {
     
     var stringValue: String? { value }
     
-    func child(at ndx: Int) -> XMLNode? {
+    func child(at ndx: Int) -> XmElement? {
         guard ndx >= 0, ndx < children.count
         else { return nil }
         return children[ndx]

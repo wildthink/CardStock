@@ -59,6 +59,8 @@ struct ProfileView: ModelView {
                     .frame(width: 200)
                     .padding()
                 layout(first: "caption")
+                    .font(.system(size: 8))
+                    .foregroundStyle(.secondary)
 //                layout(all: "section", axis: .vertical)
                 layout(first: "section/heading")
                 layout(first: "section/text")
@@ -66,7 +68,7 @@ struct ProfileView: ModelView {
 
 //                layout(all: "section/heading", axis: .vertical)
 //                    .padding(48)
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 0) {
                     ForEach(model.links) {
                         LinkView(model: $0)
 //                            .border(.red)
@@ -300,9 +302,11 @@ let jason_md = """
 @index(hints_column: swift)
 
 @caption {
-- iOS Application Architect
-- Amateur Social Scientist
-- Tinker, Maker, Smith
+```
+iOS Application Architect
+Amateur Social Scientist
+Tinker, Maker, Smith
+```
 }
 
 @links {

@@ -8,6 +8,9 @@
 import SwiftUI
 import Foundation
 
+let x = 2021_02_15 // w07
+let y = 0000_02_00 // w07
+
 //struct ModelView<Model, Content: View>: View {
 //    var model: Model
 //    var content: Content

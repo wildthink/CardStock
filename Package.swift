@@ -38,6 +38,7 @@ let package = Package(
             dependencies: [
                 "CardStock",
                 .product(name: "Markdown", package: "swift-markdown"),
+                .product(name: "AEXML", package: "AEXML"),
             ]
         ),
     ]

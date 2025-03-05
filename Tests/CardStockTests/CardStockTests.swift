@@ -1,5 +1,6 @@
 //import Testing
 @testable import CardStock
+import AEXML
 import XCTest
 import OSLog
 import SwiftUI
@@ -128,11 +129,12 @@ final class carbonTests: XCTestCase {
         </catalog>
         """
 
-        func id(_ n: XMLNode) -> String {
-            (n as? XMLElement)?.attribute(forName: "id")?.stringValue ?? ""
+        func id(_ n: AEXMLElement) -> String {
+            n["id"].string
+//            (n as? XMLElement)?attribute(forName: "id")?.stringValue ?? ""
         }
-        func pr(_ n: XMLNode) {
-            print(n.name ?? String(describing: type(of:n)), id(n), n.stringValue ?? "No Content")
+        func pr(_ n: AEXMLElement) {
+            print(n.name ?? String(describing: type(of:n)), id(n), n.stringValue)
         }
         
         /*
@@ -145,10 +147,12 @@ final class carbonTests: XCTestCase {
         
         // Parse XML
         guard let xmlData = xmlString.data(using: .utf8),
-           let xmlDoc = try? XMLDocument(data: xmlData, options: .documentTidyXML),
-           let root = xmlDoc.rootElement()
+//           let xmlDoc = try? XMLDocument(data: xmlData, options: .documentTidyXML),
+           let xmlDoc = try? AEXMLDocument(xml: xmlData)
         else { return }
         
+        let root = xmlDoc.root
+
         print(root.format())
 
         let tests = [
@@ -156,6 +160,14 @@ final class carbonTests: XCTestCase {
             "book",
             "/book", "bad/book",
         ]
+        
+        for node in root.foreach() {
+            print(node.xpath)
+            if !node.string.isEmpty {
+                print ("  ", node.string)
+            }
+        }
+        
         for t in tests {
             let items = root
                 .foreach()
@@ -188,6 +200,19 @@ final class carbonTests: XCTestCase {
     }
 }
 
+extension XmDocument {
+    var xpath: String { "/" }
+}
+
+extension XmElement {
+    var xpath: String {
+        if let parent = parent {
+            "\(parent.xpath)/\(name)[\(self.index)])"
+        } else {
+            name
+        }
+    }
+}
 
 // Make Sequence support transforming iterators
 extension Sequence {

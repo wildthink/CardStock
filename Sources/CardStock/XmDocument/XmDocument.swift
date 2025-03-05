@@ -43,88 +43,88 @@ extension XMLDocument {
     }
 }
 
-extension XMLNode {
-    
-    enum PathComponent {
-        case anyone
-        case anypath
-        case tag(String)
-        case index(Int)
-        case condition((XMLNode) -> Bool)
-    }
-    
-    func nodes(matching path: [PathComponent]) -> [XMLNode] {
-        var result: [XMLNode] = []
-//        nodes(matching: path[0...], into: &result)
-        return result
-    }
-
-    /// Returns all leaf nodes that are found matching the path component
-    /// "anyone" matches any single node, "anypath" any number intermediate nodes
-//    func _nodes(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
-////        print("CHECK", self.name ?? "NONE")
-//        guard let cond = path.first else {
-//            list.append(self)
-//            return
-//        }
-//        let matches = switch cond {
-//            case .tag(let tagName): name == tagName
-//            case .index(let idx):   idx == index
-//            case .condition(let predicate): predicate(self)
-//            case .anyone:   true
-//            case .anypath:  true
-//        }
-//        guard matches else { return }
-//        let tail = path.dropFirst()
-//        if case .anypath = cond {
-//            decendents(matching: tail, into: &list)
-//        } else if case .anyone = cond, let children {
-//            children.forEach {
-//                $0.nodes(matching: tail, into: &list)
-//            }
-//        } else {
-//            list.append(self)
-//        }
+//extension XmElement {
+//    
+//    enum PathComponent {
+//        case anyone
+//        case anypath
+//        case tag(String)
+//        case index(Int)
+//        case condition((XmElement) -> Bool)
 //    }
-    
-//    func nodes(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
-//        guard let cond = path.first else {
-//            list.append(self)
-//            return
-//        }
-//        let tail = path.dropFirst()
-//        
-//        switch cond {
-//        case .tag(let tagName):
-//            let kids = children?.filter { $0.name == tagName } ?? []
-//            nodes(matching: tail, into: &list)
-//            case .index(let idx):
-//            if idx == index {
-//                
-//            }
-//            case .condition(let predicate):
-//            if predicate(self) {
-//                nodes(matching: tail, into: &list)
-//            }
-//            case .anyone:
-//                children?.forEach {
-//                    $0.nodes(matching: tail, into: &list)
-//                }
-//            case .anypath:
-//                decendents(matching: tail, into: &list)
-//        }
-//     }
-
-//    func decendents(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
-//        guard let children, !path.isEmpty else { return }
-//        for child in children {
-//            child.decendents(matching: path, into: &list)
-////            child.children?.forEach {
-//            child.nodes(matching: path, into: &list)
+//    
+//    func nodes(matching path: [PathComponent]) -> [XmElement] {
+//        var result: [XmElement] = []
+////        nodes(matching: path[0...], into: &result)
+//        return result
+//    }
+//
+//    /// Returns all leaf nodes that are found matching the path component
+//    /// "anyone" matches any single node, "anypath" any number intermediate nodes
+////    func _nodes(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
+//////        print("CHECK", self.name ?? "NONE")
+////        guard let cond = path.first else {
+////            list.append(self)
+////            return
+////        }
+////        let matches = switch cond {
+////            case .tag(let tagName): name == tagName
+////            case .index(let idx):   idx == index
+////            case .condition(let predicate): predicate(self)
+////            case .anyone:   true
+////            case .anypath:  true
+////        }
+////        guard matches else { return }
+////        let tail = path.dropFirst()
+////        if case .anypath = cond {
+////            decendents(matching: tail, into: &list)
+////        } else if case .anyone = cond, let children {
+////            children.forEach {
+////                $0.nodes(matching: tail, into: &list)
 ////            }
-//        }
-//    }
-}
+////        } else {
+////            list.append(self)
+////        }
+////    }
+//    
+////    func nodes(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
+////        guard let cond = path.first else {
+////            list.append(self)
+////            return
+////        }
+////        let tail = path.dropFirst()
+////        
+////        switch cond {
+////        case .tag(let tagName):
+////            let kids = children?.filter { $0.name == tagName } ?? []
+////            nodes(matching: tail, into: &list)
+////            case .index(let idx):
+////            if idx == index {
+////                
+////            }
+////            case .condition(let predicate):
+////            if predicate(self) {
+////                nodes(matching: tail, into: &list)
+////            }
+////            case .anyone:
+////                children?.forEach {
+////                    $0.nodes(matching: tail, into: &list)
+////                }
+////            case .anypath:
+////                decendents(matching: tail, into: &list)
+////        }
+////     }
+//
+////    func decendents(matching path: ArraySlice<PathComponent>, into list: inout [XMLNode]) {
+////        guard let children, !path.isEmpty else { return }
+////        for child in children {
+////            child.decendents(matching: path, into: &list)
+//////            child.children?.forEach {
+////            child.nodes(matching: path, into: &list)
+//////            }
+////        }
+////    }
+//}
 
 extension XmDocument {
     
@@ -268,7 +268,7 @@ public extension Sequence {
     func select<M: Markup>(
         _ select: String,
         ofType mt: M.Type
-    ) -> some Sequence<M> where Element: XMLNode {
+    ) -> some Sequence<M> where Element: XmElement {
         var results: [M] = []
         for item in self {
             let nodes = item
