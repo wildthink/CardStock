@@ -89,7 +89,7 @@ public struct LinkView: View {
     public var body: some View {
         LabeledContent(model.label) {
             icon
-                .frame(maxWidth: 24)
+                .frame(maxWidth: 16)
         }
         .contentShape(.rect)
         .onTapGesture {

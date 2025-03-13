@@ -17,6 +17,7 @@ struct xText: ModelView {
 
     var body: some View {
         Text(model)
+            .multilineTextAlignment(.leading)
     }
 }
 
@@ -57,7 +58,7 @@ struct ProfileView: ModelView {
             VStack(alignment: .leading, spacing: 0) {
                 layout(first: "hero")
                     .frame(width: 200)
-                    .padding()
+//                    .padding()
                 layout(first: "caption")
                     .font(.system(size: 8))
                     .foregroundStyle(.secondary)
@@ -65,6 +66,7 @@ struct ProfileView: ModelView {
                 layout(first: "section/heading")
                 layout(first: "section/text")
                     .frame(maxWidth: 300)
+                    .border(.green)
 
 //                layout(all: "section/heading", axis: .vertical)
 //                    .padding(48)
@@ -123,7 +125,8 @@ public extension ModelView where Model == XmDocument {
     func view(_ attr: AttributedString) -> some View {
         if attr.link != nil {
             Text(attr)
-                .border(.red)
+                .multilineTextAlignment(.leading)
+//                .border(.red)
         } else if let url = attr.imageURL {
             AsyncImage(url: url) { image in
                    image
@@ -136,6 +139,7 @@ public extension ModelView where Model == XmDocument {
                .clipShape(.rect(cornerRadius: 8))
         } else {
             xText(attr)
+//                            .border(.red)
         }
     }
 
