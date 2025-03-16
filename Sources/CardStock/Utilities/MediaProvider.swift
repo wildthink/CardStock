@@ -8,6 +8,45 @@
 import Foundation
 import SwiftUI
 
+public enum MediaType: Codable, Hashable, Equatable {
+    case image, video
+    case slideshow
+    case text
+    case markdown
+    case color
+}
+
+public enum ResourceLocation: Codable, Hashable, Equatable {
+    case system(String)
+    // Bundle id, resource name.ext
+    case module(String?, String)
+    case remote(URL)
+}
+
+public struct Media: Codable, Hashable, Equatable {
+    var host: String?
+    var mediaType: MediaType
+    var location: ResourceLocation
+}
+/**
+ Examples:
+ ```
+ color:orange
+ color:#hex
+ image:/module/ocean
+ image:/system/ladybug
+ ```
+ */
+//public extension Media {
+//    init(uri: String) {
+//        self.uri = uri
+//        self.mediaType = .color
+//        self.location = .color("")
+//    }
+//}
+
+// MARK:
+
 public struct MediaProvider: Sendable {
     public static let shared: MediaProvider = .init()
 }
@@ -55,18 +94,42 @@ struct MediaView_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: 8) {
             HStack {
-                Portrait(card: .portrait)
+                AdaptiveLockupView(model: .portrait, presentationAspect: .portrait)
                     .frame(width: 180)
-                Landscape(card: .preview)
+//                    .layoutPriority(0.5)
+                AdaptiveLockupView(model: .preview, presentationAspect: .landscape)
+//                    .layoutPriority(1)
             }
-//                .border(.red)
-
-            CardTableRow(card: .preview)
+            AdaptiveLockupView(model: .preview, presentationAspect: .tableRow)
         }
         .frame(height: 600)
         .padding(20)
     }
 }
+
+//enum PresentationAspect {
+//    case square, portrait, landscape, tableRow
+//}
+public enum PresentationAspect: CaseIterable, Hashable {
+    case tableRow, tile, poster, hero, portrait, landscape
+}
+
+struct AdaptiveLockupView: View {
+    var model: Card
+    var presentationAspect: PresentationAspect
+    
+    var body: some View {
+        switch presentationAspect {
+        case .tile, .portrait, .poster, .hero:
+            Portrait(card: model)
+        case .landscape:
+            Landscape(card: model)
+        case .tableRow:
+            CardTableRow(card: model)
+        }
+    }
+}
+
 
 struct Card: Identifiable, Codable {
     var id: Int64
@@ -97,7 +160,6 @@ extension Card {
 
 }
 
-
 struct CardTableRow: View {
     var card: Card
     @State var size: CGSize = .zero
@@ -109,7 +171,7 @@ struct CardTableRow: View {
             .aspectRatio(contentMode: .fit)
             .frame(height: size.height)
 //            .background(ContainerRelativeShape())
-            .cornerRadius(5)
+//            .cornerRadius(5)
     }
     
     var body: some View {
@@ -132,8 +194,9 @@ struct CardTableRow: View {
         .onGeometryChange(for: CGSize.self, of: \.size) {
             self.size = $0
         }
-        .padding(8)
-        .background(.tertiary)
+//        .padding(8)
+        .background(.thickMaterial)
+//        .background(.tertiary)
             .cornerRadius(8)
     }
 }

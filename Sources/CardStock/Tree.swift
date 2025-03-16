@@ -6,19 +6,19 @@
 //
 import Foundation
 
-final class Tree<Element> {
-    weak var parent: Tree?
-    var tag: String
-    var index: Int
-    var attributes: [String: Any]
-    var element: Element
-    var children: [Tree]
+public final class Tree<Element> {
+    public weak var parent: Tree?
+    public var tag: String
+    public var index: Int
+    public var attributes: [String: Any]
+    public var element: Element
+    public var children: [Tree]
     
-    var isRoot: Bool { parent == nil }
-    var isLeaf: Bool { children.isEmpty }
-    var hasChildren: Bool { !isLeaf }
+    public var isRoot: Bool { parent == nil }
+    public var isLeaf: Bool { children.isEmpty }
+    public var hasChildren: Bool { !isLeaf }
     
-    init(parent: Tree? = nil, tag: String, attributes: [String : Any], element: Element, children: [Tree]) {
+    public init(parent: Tree? = nil, tag: String, attributes: [String : Any], element: Element, children: [Tree]) {
         self.parent = parent
         self.tag = tag
         self.attributes = attributes
@@ -27,16 +27,16 @@ final class Tree<Element> {
         self.index = 0
     }
     
-    func addChild(_ tree: Tree) {
+    public func addChild(_ tree: Tree) {
         children.append(tree)
         tree.parent = self
         tree.index = children.count
     }
     
-    func attribute<A>(_ t: A.Type = A.self, named: String) -> A? {
+    public func attribute<A>(_ t: A.Type = A.self, named: String) -> A? {
         attributes[named] as? A
     }
-    func attribute(set key: String, to value: Any) {
+    public func attribute(set key: String, to value: Any) {
         attributes[key] = value
     }
 }
@@ -87,11 +87,11 @@ extension Tree {
 
 // MARK: More Tree Extensions
 extension Tree: Hashable {
-    static func == (lhs: Tree<Element>, rhs: Tree<Element>) -> Bool {
+    public static func == (lhs: Tree<Element>, rhs: Tree<Element>) -> Bool {
         lhs === rhs
     }
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(ObjectIdentifier(self))
     }
 }

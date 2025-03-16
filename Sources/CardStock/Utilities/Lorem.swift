@@ -2,6 +2,15 @@
 
 import Foundation
 
+/*
+ Faces
+ https://loremfaces.net
+ Available sizes: 24, 48, 96, 128, 256
+ Available IDS: 1-5
+ https://loremfaces.net/<size>/id/<id>.jpg
+ https://loremfaces.net/256/id/1.jpg
+ */
+
 /// A lightweight lorem ipsum generator.
 public final class Lorem {
 

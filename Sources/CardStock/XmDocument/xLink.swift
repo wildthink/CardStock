@@ -21,10 +21,10 @@ public struct xLink: Identifiable {
     public var id: Int { url.absoluteString.hashValue }
     public var label: String
     public var url: URL
-    public var imageName: String {
-        _imageName ?? commonFavicon ?? defaultIcon
-    }
-    var _imageName: String?
+//    public var imageName: String {
+//        _imageName ?? commonFavicon ?? defaultIcon
+//    }
+//    var _imageName: String?
 //    public var customIcon: SwiftUI.Image?
     
 //    public var icon: SwiftUI.Image {
@@ -41,7 +41,7 @@ public extension xLink {
         else { return nil }
         self.url = url
         self.label = link.title ?? url.host ?? urlString
-        self._imageName = nil
+//        self._imageName = nil
     }
 
     init?(_ link: Markdown.Link) {
@@ -50,7 +50,7 @@ public extension xLink {
         else { return nil }
         self.url = url
         self.label = link.title ?? url.host ?? urlString
-        self._imageName = nil
+//        self._imageName = nil
     }
 }
 
@@ -67,44 +67,55 @@ public extension xLink {
         }
     }
     
-    var commonFavicon: String? {
-        guard let host = url.host else { return nil }
-        let list = host.split(separator: ".")
-        return list.count >= 2 ? String(list[list.count - 2]) : nil
-    }
+//    var commonFavicon: String? {
+//        guard let host = url.host else { return nil }
+//        let list = host.split(separator: ".")
+//        return list.count >= 2 ? String(list[list.count - 2]) : nil
+//    }
 }
 
-extension URL {
-    var commonFavicon: String? {
-        guard let host = host else { return nil }
-        let list = host.split(separator: ".")
-        return list.count >= 2 ? String(list[list.count - 2]) : nil
-    }
-}
+//extension URL {
+//    var commonFavicon: String? {
+//        guard let host = host else { return nil }
+//        let list = host.split(separator: ".")
+//        return list.count >= 2 ? String(list[list.count - 2]) : nil
+//    }
+//}
 
 public struct LinkView: View {
     @Environment(\.openURL) var openURL
     public var model: xLink
     
     public var body: some View {
-        LabeledContent(model.label) {
-            icon
-                .frame(maxWidth: 24)
+        Button(action: {
+            openURL(self.model.url)
+        }) {
+            Label {
+                Text(model.label)
+                    .foregroundColor(.primary)
+            } icon: {
+                Favicon(url: model.url, size: .small, defaultName: model.defaultIcon)
+            }
+//            .padding()
         }
-        .contentShape(.rect)
-        .onTapGesture {
-            openURL(model.url)
-        }
+//        LabeledContent(model.label) {
+//            Favicon(url: model.url, size: .small, defaultName: model.defaultIcon)
+//                .frame(maxWidth: 24)
+//        }
+//        .contentShape(.rect)
+//        .onTapGesture {
+//            openURL(model.url)
+//        }
     }
     
-    @ViewBuilder
-    var icon: some View {
-        if let img = Image(qname: model.imageName, bundle: .module)
-            ?? Image(qname: model.defaultIcon, bundle: .module) {
-            img
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-//            .frame(width: 24, height: 24)
-        }
-    }
+//    @ViewBuilder
+//    var icon: some View {
+//        if let img = Image(qname: model.imageName, bundle: .module)
+//            ?? Image(qname: model.defaultIcon, bundle: .module) {
+//            img
+//            .resizable()
+//            .aspectRatio(contentMode: .fit)
+////            .frame(width: 24, height: 24)
+//        }
+//    }
 }

@@ -8,6 +8,15 @@
 import SwiftUI
 @preconcurrency import Markdown
 
+public struct Profile: Identifiable {
+    public var id: Int64
+    public var name: String
+    public var links: [URL]
+    public var actions: [URL]
+    public var content: Tree<String>
+}
+
+
 struct xText: ModelView {
     var model: AttributedString
     
@@ -68,13 +77,24 @@ struct ProfileView: ModelView {
 
 //                layout(all: "section/heading", axis: .vertical)
 //                    .padding(48)
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 8) {
                     ForEach(model.links) {
                         LinkView(model: $0)
+//                            .frame(height: 16)
+//                            .labeledContentStyle(LeadingIconLabeledContentStyle())
 //                            .border(.red)
                     }
                 }
             }
+        }
+    }
+}
+
+struct LeadingIconLabeledContentStyle: LabeledContentStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(alignment: .center, spacing: 8) {
+            configuration.label
+            configuration.content
         }
     }
 }

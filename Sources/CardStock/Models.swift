@@ -6,6 +6,19 @@
 //
 
 import Foundation
+
+public protocol QualifiedValueContainer {
+    associatedtype QualifiedValue: Sendable
+    var qualifiedValue: QualifiedValue { get }
+}
+
+struct Attachment<Value: Sendable>: QualifiedValueContainer, Sendable {
+    var valueType: Any.Type { Value.self }
+    let qualifiedValue: Value
+}
+
+@MainActor let bag: [any QualifiedValueContainer] = []
+
 /*
  Log line - A logline is a one-sentence summary of the story's main conflict.
             It is not a statement of theme but rather a premise.

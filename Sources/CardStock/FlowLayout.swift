@@ -8,7 +8,7 @@ A flow layout for SwiftUI's layout.
 import SwiftUI
 
 struct FlowLayout: Layout {
-    var alignment: Alignment = .center
+    var alignment: Alignment = .leading
     var spacing: CGFloat?
     
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
