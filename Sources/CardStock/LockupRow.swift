@@ -2,7 +2,7 @@ import SwiftUI
 
 struct Lockup<Header: View, Footer: View> {
     var title, subtitle: String?
-    var hero: Image?
+    var hero: Media?
     var header: (Self) -> Header
     var footer: (Self) -> Footer
 }
@@ -10,7 +10,7 @@ struct Lockup<Header: View, Footer: View> {
 @MainActor let lockup = Lockup(
     title: "Sample Title",
     subtitle: "Sample Subtitle",
-    hero: Image("ocean_portrait", bundle: .mediaImages),
+    hero: Media("ocean_portrait", bundle: .mediaImages),
     header: { _ in EmptyView() },
     footer: { _ in EmptyView() }
 )
@@ -116,7 +116,7 @@ struct __ContentView: View {
             LockupAdaptive(lockup: Lockup(
                 title: "Sample Title",
                 subtitle: "Sample Subtitle",
-                hero: Image("ocean_portrait", bundle: .mediaImages),
+                hero: Media("ocean_portrait", bundle: .mediaImages),
 //                size: CGSize(width: 200, height: 200),
                 header: { _ in EmptyView() },
                 footer: { _ in EmptyView() }

@@ -192,7 +192,7 @@ where Item.ID: Sendable
             }
             GeometryReader { gp in
                 ScrollView(axis, showsIndicators: false) {
-                    AnyLayout(layout) {
+                    layout {
                         ForEach(catalog) { item in
                             tile(item)
                                 .frame(proposed: proposedSize(in: gp))
@@ -272,8 +272,8 @@ where Item.ID: Sendable
     }
     
 //    @LayoutBuilder
-    var layout: any Layout {
-        switch visualStyle {
+    var layout: AnyLayout {
+        let l: any Layout = switch visualStyle {
         case .page:
             HStackLayout()
         case .grid:
@@ -284,6 +284,7 @@ where Item.ID: Sendable
         case .carousel:
             HStackLayout()
         }
+        return AnyLayout(l)
     }
 }
 

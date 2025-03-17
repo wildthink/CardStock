@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-public enum MediaType: Codable, Hashable, Equatable {
+public enum MediaType: Hashable, Equatable {
     case image, video
     case slideshow
     case text
@@ -16,18 +16,59 @@ public enum MediaType: Codable, Hashable, Equatable {
     case color
 }
 
-public enum ResourceLocation: Codable, Hashable, Equatable {
+public enum ResourceLocation: Hashable, Equatable {
     case system(String)
-    // Bundle id, resource name.ext
-    case module(String?, String)
+    case module(String, Bundle?)
     case remote(URL)
 }
 
-public struct Media: Codable, Hashable, Equatable {
+public struct Media: Hashable, Equatable {
     var host: String?
     var mediaType: MediaType
     var location: ResourceLocation
+    var resizable: Bool
 }
+
+public extension Media {
+    
+    init(_ name: String, bundle: Bundle = .main) {
+        self = Media(mediaType: .image, location: .module(name, bundle), resizable: true)
+    }
+
+    func resizable(_ resizable: Bool = true) -> Media {
+        var media = self
+        media.resizable = resizable
+        return media
+    }
+}
+
+extension Media: View {
+    public var body: some View {
+        switch mediaType {
+        case .image:
+            Image(systemName: "ladybug")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+        default:
+            EmptyView()
+        }
+//        case .video:
+//            VideoPlayer(player: AVPlayer(url: url))
+//                .frame(height: 300)
+//        }
+    }
+    
+//    private func loadImage() -> Image? {
+//        do {
+//            let data = try Data(contentsOf: url)
+//            return UIImage(data: data)
+//        } catch {
+//            print("Failed to load image from URL: \(url)")
+//            return nil
+//        }
+//    }
+}
+
 /**
  Examples:
  ```
