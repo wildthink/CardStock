@@ -41,6 +41,10 @@ public final class Tree<Element> {
     }
 }
 
+//extension Tree: Sendable where Element: Sendable {}
+
+//extension Tree: Codable where Element: Codable {}
+
 // MARK: XPath like Support
 extension Tree {
     enum PathComponent {

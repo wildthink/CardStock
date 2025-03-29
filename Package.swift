@@ -18,6 +18,7 @@ let package = Package(
 //        .package(path: "/Users/jason/dev/ThirdParty/AEXML"),
         .package(url: "https://github.com/wildthink/AEXML", branch: "main"),
         .package(url: "https://github.com/swiftlang/swift-markdown.git", branch: "main"),
+        .package(url: "https://github.com/danielsaidi/DeckKit.git", from: "1.5.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -27,6 +28,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Markdown", package: "swift-markdown"),
                 .product(name: "AEXML", package: "AEXML"),
+                .product(name: "DeckKit", package: "deckkit"),
             ],
             resources: [
                 .process("Resources/Media.xcassets"),

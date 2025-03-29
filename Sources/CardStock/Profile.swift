@@ -7,15 +7,76 @@
 
 import SwiftUI
 @preconcurrency import Markdown
+import UniformTypeIdentifiers
 
 public struct Profile: Identifiable {
     public var id: Int64
     public var name: String
-    public var links: [URL]
+    public var hero: UTL?
+    public var links: [UTL]
     public var actions: [URL]
     public var content: Tree<String>
 }
 
+/// Uniform Type Link/Resource
+public struct UTL: Identifiable, Sendable, Codable {
+    public var id: Int64
+    public var name: String
+    public var utype: UTType
+    public var proposedSize: ProposedViewSize
+    public var preview: URL?
+    public var content: URL
+    
+    init(
+        id: Int64? = nil,
+        name: String,
+        utype: UTType,
+        proposedSize: ProposedViewSize = .unspecified,
+        preview: URL? = nil,
+        content: URL
+    ) {
+        self.id = id ?? Int64(content.hashValue)
+        self.name = name
+        self.utype = utype
+        self.proposedSize = proposedSize
+        self.preview = preview
+        self.content = content
+    }
+}
+
+extension ProposedViewSize: Codable {
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let size = try container.decode(CGSize?.self)
+        self = size.map { ProposedViewSize($0) } ?? .unspecified
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.width != nil && self.height != nil ? CGSize(width: self.width!, height: self.height!) : nil)
+    }
+}
+
+extension URL {
+    init(scheme: String, path: String) {
+        var parts = URLComponents()
+        parts.scheme = scheme
+        parts.path = path
+        self = parts.url!
+    }
+    
+    static func file(_ path: String) -> URL {
+        URL(fileURLWithPath: path)
+    }
+    static func app(_ path: String) -> URL {
+        URL(scheme: "app", path: path)
+    }
+}
+
+extension UTL {
+    static let preview: UTL = UTL(name: "preview",
+                utype: .image, content: .app("image/preview"))
+}
 
 struct xText: ModelView {
     var model: AttributedString
@@ -329,7 +390,7 @@ Tinker, Maker, Smith
 ```
 }
 
-@links {
+@links(#biz){
     [Gravatar](https://jasonjobe.link)
     [](https://www.linkedin.com/in/jason-jobe-bb0b991/)
     [](https://medium.com/@jasonjobe)

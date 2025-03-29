@@ -1,5 +1,5 @@
 {
-  "originHash" : "6e5a718b67ddc0bc0ade006598998865814ca1914584d2cde097a501d2b20cd6",
+  "originHash" : "fe64fa382b8e770346fa9fe635d169ffc82cd26d985aeb0ab0938209c1730ee8",
   "pins" : [
     {
       "identity" : "aexml",
@@ -8,6 +8,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "56d7883be85b5424fbc55a5c9bf85f5584e9f0b1"
+      }
+    },
+    {
+      "identity" : "deckkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/danielsaidi/DeckKit.git",
+      "state" : {
+        "revision" : "221daadf9eec50ff23a5f54c849a836af56300b7",
+        "version" : "1.5.0"
       }
     },
     {

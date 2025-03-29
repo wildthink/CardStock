@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import UniformTypeIdentifiers
 
 public enum MediaType: Hashable, Equatable {
     case image, video
