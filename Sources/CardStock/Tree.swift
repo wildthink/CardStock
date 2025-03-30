@@ -18,7 +18,13 @@ public final class Tree<Element> {
     public var isLeaf: Bool { children.isEmpty }
     public var hasChildren: Bool { !isLeaf }
     
-    public init(parent: Tree? = nil, tag: String, attributes: [String : Any], element: Element, children: [Tree]) {
+    public init(
+        parent: Tree? = nil,
+        tag: String,
+        attributes: [String : Any] = [:],
+        element: Element,
+        children: [Tree] = []
+    ) {
         self.parent = parent
         self.tag = tag
         self.attributes = attributes

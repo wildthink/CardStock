@@ -39,7 +39,7 @@ public extension UTType {
  and the institution."[3]
  */
     static let persona: UTType =
-    UTType(importedAs: "com.wildthink.persona", conformingTo: .item)
+    UTType(importedAs: "com.wildthink.persona", conformingTo: .contact)
 
     static let placemark: UTType =
     UTType(importedAs: "com.wildthink.placemark", conformingTo: .item)
@@ -70,7 +70,17 @@ public extension UTType {
     static let pbxproj: UTType =
     UTType(filenameExtension: "pbxproj", conformingTo: .text)!
     
-    // TODO: webarchive, .url
+    // https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
+    
+    /// A Social URL is an identifier for a specific Social media account/user
+    /// Not the top level domain or web site.
+    static let socialURL: UTType =
+    UTType(importedAs: "com.wildthink.socialURL", conformingTo: .url)
+
+    /// A Contact URL includes tel: mailto: zoommtg: zoomus: sms: etc.
+    static let contactURL: UTType =
+    UTType(importedAs: "com.wildthink.contactURL", conformingTo: .url)
+
     /**
      Example: Contents of "to_example.url"
     [InternetShortcut]

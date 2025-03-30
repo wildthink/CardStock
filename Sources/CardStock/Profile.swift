@@ -9,20 +9,56 @@ import SwiftUI
 @preconcurrency import Markdown
 import UniformTypeIdentifiers
 
-public struct Profile: Identifiable {
+public struct Profile: Identifiable, @unchecked Sendable {
     public var id: Int64
     public var name: String
     public var hero: UTL?
     public var links: [UTL]
-    public var actions: [URL]
+    public var actions: [any Action]
     public var content: Tree<String>
+    
+    public init(
+        id: Int64? = nil,
+        name: String,
+        hero: UTL? = nil,
+        links: [UTL] = [],
+        actions: [any Action] = [],
+        content: Tree<String>
+    ) {
+        self.id = id ?? Int64(name.hashValue)
+        self.name = name
+        self.hero = hero
+        self.links = links
+        self.actions = actions
+        self.content = content
+    }
+}
+
+public protocol Action<Model>: Identifiable, Sendable {
+    associatedtype Model: Sendable
+    var id: Int64 { get }
+    var name: String { get }
+    var model: Model { get }
+}
+
+public struct UxAction: Action {
+    public var id: Int64
+    public var name: String
+    public var model: String
+}
+
+public struct UxLink: Identifiable {
+    public var id: Int { url.absoluteString.hashValue }
+    public var url: URL
+    public var headline: String
+    public var byline: String
 }
 
 /// Uniform Type Link/Resource
 public struct UTL: Identifiable, Sendable, Codable {
     public var id: Int64
     public var name: String
-    public var utype: UTType
+    public var uti: UTType
     public var proposedSize: ProposedViewSize
     public var preview: URL?
     public var content: URL
@@ -30,14 +66,14 @@ public struct UTL: Identifiable, Sendable, Codable {
     init(
         id: Int64? = nil,
         name: String,
-        utype: UTType,
+        uti: UTType,
         proposedSize: ProposedViewSize = .unspecified,
         preview: URL? = nil,
         content: URL
     ) {
         self.id = id ?? Int64(content.hashValue)
         self.name = name
-        self.utype = utype
+        self.uti = uti
         self.proposedSize = proposedSize
         self.preview = preview
         self.content = content
@@ -74,8 +110,25 @@ extension URL {
 }
 
 extension UTL {
+    static func image(_ name: String, url: URL) -> UTL {
+        UTL(name: name, uti: .image, content: url)
+    }
+}
+
+// MARK: Preview
+let j_profile = Profile(
+    name: "jason",
+    hero: .image("hero", url: URL(string: "https://wildthink.com/apps/jason/Jason_AI.jpeg")!),
+    links: [],
+    actions: [],
+    content: Tree<String>(
+        tag: "body",
+        element: "Ain't got no body...")
+)
+
+extension UTL {
     static let preview: UTL = UTL(name: "preview",
-                utype: .image, content: .app("image/preview"))
+                uti: .image, content: .app("image/preview"))
 }
 
 struct xText: ModelView {

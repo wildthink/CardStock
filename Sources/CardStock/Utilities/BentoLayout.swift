@@ -8,6 +8,22 @@
 
 import SwiftUI
 
+public struct BentoBox<Content: View>: View {
+    @Environment(\.bentoBoxAxis) var axis
+    @ViewBuilder var content: () -> Content
+    
+    public init(@ViewBuilder content: @escaping () -> Content) {
+        self.content = content
+    }
+    
+    public var body: some View {
+        BentoLayout(axis: axis) {
+            content()
+                .environment(\.bentoBoxAxis, axis.opposite)
+        }
+    }
+}
+
 extension ContainerValues {
     @Entry var layoutWeight: Double = 1
 }
@@ -19,18 +35,26 @@ extension View {
     }
 }
 
-struct BentoLayout: Layout {
-    var axis: Axis = .horizontal
-
-    enum Axis {
-        case horizontal
-        case vertical
+public extension Axis {
+    var opposite: Axis {
+        switch self {
+            case .horizontal: return .vertical
+            case .vertical: return .horizontal
+        }
     }
+}
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+public struct BentoLayout: Layout {
+    public var axis: Axis = .horizontal
+
+    public init(axis: Axis) {
+        self.axis = axis
+    }
+    
+    public func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         guard !subviews.isEmpty else { return .zero }
 
-        let totalWeight = subviews.reduce(into: 0) { $0 + $1.containerValues.layoutWeight }
+        let totalWeight = subviews.reduce(into: 0) { $0 += $1.containerValues.layoutWeight }
         let availableSize = axis == .horizontal ? proposal.width ?? 0 : proposal.height ?? 0
 
         var currentOffset: CGFloat = 0
@@ -43,14 +67,14 @@ struct BentoLayout: Layout {
             }
         }
 
-        if axis == .horizontal {
-            return CGSize(width: currentOffset, height: proposal.height ?? 0)
+        return if axis == .horizontal {
+            CGSize(width: currentOffset, height: proposal.height ?? 0)
         } else {
-            return CGSize(width: proposal.width ?? 0, height: currentOffset)
+            CGSize(width: proposal.width ?? 0, height: currentOffset)
         }
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) {
+    public func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) {
         guard !subviews.isEmpty else { return }
 
         let totalWeight = subviews.reduce(0) { $0 + $1.containerValues.layoutWeight }
@@ -71,22 +95,48 @@ struct BentoLayout: Layout {
     }
 }
 
-//struct BentoBox<Content: View>: View {
-//    var layoutWeight: CGFloat = 1
-//    var content: () -> Content
-//
-//    var body: some View {
-//        content()
-//            .layoutPriority(layoutWeight)
-//    }
-//}
+extension EnvironmentValues {
+    @Entry var bentoBoxAxis: Axis = .horizontal
+}
 
-//#Preview {
-//    ZStack {
-//        BentoLayout {
-//            Color.blue.layoutWeight(1)
-//            Color.yellow.layoutWeight(1)
-//        }
-//    }
-//    .frame(width: 300, height: 300)
-//}
+extension View {
+    func bentoBox(axis: Axis) -> some View {
+        environment(\.bentoBoxAxis, axis)
+    }
+}
+
+#Preview ("Vertical") {
+    ZStack {
+        BentoBox {
+            Color.blue.layoutWeight(2)
+            Color.yellow.layoutWeight(1)
+            BentoBox {
+                Color.red
+                Color.cyan.layoutWeight(3)
+            }
+        }
+        .bentoBox(axis: .vertical)
+    }
+    .frame(width: 300, height: 300)
+}
+
+#Preview ("Horizontal") {
+    @Previewable @State var toggle: Bool = true
+    
+    VStack {
+        BentoBox {
+            Color.blue.layoutWeight(2)
+            Color.yellow.layoutWeight(1)
+            BentoBox {
+                Color.red
+                Color.cyan.layoutWeight(3)
+            }
+        }
+        .bentoBox(axis: toggle ? .horizontal : .vertical)
+        .animation(.default, value: toggle)
+        Divider()
+        Toggle("Horizontal", isOn: $toggle)
+    }
+    .frame(width: 300, height: 300)
+    .padding()
+}

@@ -71,3 +71,7 @@ Why Your Cards Need a Footer for Metadata
 Data design for faster scanning
 https://uxmovement.medium.com/why-your-cards-need-a-footer-for-metadata-c0a19cc5154d
 
+Vertical vs. Horizontal Cards: Which Are Better?
+The best way to display content
+https://uxmovement.medium.com/vertical-vs-horizontal-cards-which-are-better-4ee8ba1f868d
+
