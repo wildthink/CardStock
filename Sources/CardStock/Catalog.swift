@@ -99,7 +99,16 @@ struct LockupTile: View {
     
     var body: some View {
         ZStack {
-            Color.orange.opacity(0.8)
+            BentoBox {
+                Color.blue.layoutWeight(2)
+                Color.orange.layoutWeight(1)
+                BentoBox {
+                    Color.red
+                    Color.cyan //.layoutWeight()
+                }
+            }
+
+//            Color.orange.opacity(0.8)
 //            AdaptiveLockupView(model: .portrait, presentationAspect: lockupStyle)
             Text("Tile \(id)")
                 .font(.headline)
@@ -237,7 +246,7 @@ where Item.ID: Sendable
         return switch visualStyle {
         case .page: ProposedViewSize(width: wd, height: ht)
         case .table: ProposedViewSize(width: wd, height: ht/4)
-        case .carousel: ProposedViewSize(width: wd/4, height: ht)
+        case .carousel: ProposedViewSize(width: wd/3, height: ht/2)
         case .grid:ProposedViewSize(width: 80, height: 80)
         }
     }
@@ -289,7 +298,7 @@ where Item.ID: Sendable
 }
 
 #Preview {
-    CatalogView(catalog: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], tile: LockupTile.init)
+    CatalogView(catalog: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], tile: LockupTile.init)
         .padding()
         .frame(width: 340, height: 400)
         .border(.red)

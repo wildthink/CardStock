@@ -17,7 +17,7 @@ public struct BentoBox<Content: View>: View {
     }
     
     public var body: some View {
-        BentoLayout(axis: axis) {
+        AxialLayout(axis: axis) {
             content()
                 .environment(\.bentoBoxAxis, axis.opposite)
         }
@@ -44,7 +44,7 @@ public extension Axis {
     }
 }
 
-public struct BentoLayout: Layout {
+public struct AxialLayout: Layout {
     public var axis: Axis = .horizontal
 
     public init(axis: Axis) {
@@ -108,8 +108,10 @@ extension View {
 #Preview ("Vertical") {
     ZStack {
         BentoBox {
-            Color.blue.layoutWeight(2)
-            Color.yellow.layoutWeight(1)
+            AxialLayout(axis: .horizontal) {
+                Color.blue.layoutWeight(2)
+                Color.yellow.layoutWeight(1)
+            }
             BentoBox {
                 Color.red
                 Color.cyan.layoutWeight(3)
@@ -129,7 +131,7 @@ extension View {
             Color.yellow.layoutWeight(1)
             BentoBox {
                 Color.red
-                Color.cyan.layoutWeight(3)
+                Color.cyan.layoutWeight(2)
             }
         }
         .bentoBox(axis: toggle ? .horizontal : .vertical)
