@@ -9,6 +9,18 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
+/*
+ Uniform Resource Identifier (URI) Schemes
+ https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
+ 
+ MIME Types
+ https://www.sitepoint.com/mime-types-complete-list/
+ 
+ UTTypes
+ https://developer.apple.com/documentation/uniformtypeidentifiers/uttype-swift.struct
+ 
+*/
+
 /// This overload of the matching operator for ``UTType`` enables a
 /// a clean ergonmic and safer check using the UTType confomance
 /// hierarchy.
@@ -69,9 +81,7 @@ public extension UTType {
     /// The UTType for Xcode project.pbxproj files
     static let pbxproj: UTType =
     UTType(filenameExtension: "pbxproj", conformingTo: .text)!
-    
-    // https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
-    
+        
     /// A Social URL is an identifier for a specific Social media account/user
     /// Not the top level domain or web site.
     static let socialURL: UTType =
