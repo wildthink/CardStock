@@ -21,7 +21,7 @@ public struct CardViewModifier: ViewModifier {
 
     public func body(content: Content) -> some View {
         content
-            .padding()
+//            .padding()
             .background(backgroundColor)
             .cornerRadius(cornerRadius)
             .shadow(color: shadowColor, radius: shadowRadius, x: 0, y: 2)
@@ -46,8 +46,15 @@ public enum VisualPlacement: Int, Sendable {
 }
 
 public extension View {
-    func cardStyle(cornerRadius: CGFloat = 12, shadowRadius: CGFloat = 4) -> some View {
-        self.modifier(CardViewModifier(cornerRadius: cornerRadius, shadowRadius: shadowRadius))
+    func cardStyle(
+        pad: CGFloat = 4,
+        cornerRadius: CGFloat = 12,
+        shadowRadius: CGFloat = 4
+    ) -> some View {
+        self
+            .padding(.horizontal, pad * 2)
+            .padding(.vertical, pad)
+            .modifier(CardViewModifier(cornerRadius: cornerRadius, shadowRadius: shadowRadius))
     }
 }
 
