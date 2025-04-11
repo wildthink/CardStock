@@ -2,13 +2,13 @@
     baseURL: https://wildthink.com/apps/jason
 }
 
-@profile(aka: jason, tag: preview, tag: public) {
+@profile(aka: jason, tags: [preview, public]) {
+@index(hints_column: swift)
 
 # Jason
 
 @avatar { ![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg) }
 
-@index(hints_column: swift)
 
 @caption {
     ```

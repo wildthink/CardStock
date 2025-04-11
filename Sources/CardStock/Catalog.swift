@@ -168,19 +168,22 @@ public struct CatalogViewConfiguration {
     public var showControls: Bool = true
     public var showCount: Bool = true
     public var showsIndicators: Bool = false
+    public var spacing: ProposedViewSize = .unspecified
     
     public init(
         defaultStyle: VisualStyle = .carousel,
         showHeadline: Bool = true,
         showControls: Bool = true,
         showCount: Bool = true,
-        showsIndicators: Bool = false
+        showsIndicators: Bool = false,
+        spacing: ProposedViewSize = .unspecified
     ) {
         self.defaultStyle = defaultStyle
         self.showHeadline = showHeadline
         self.showControls = showControls
         self.showCount = showCount
         self.showsIndicators = showsIndicators
+        self.spacing = spacing
     }
 }
 //}
@@ -315,19 +318,19 @@ where Item.ID: Sendable
         }
     }
     
-    var layout: AnyLayout {
-        let l: any Layout = switch visualStyle {
+    var layout: some Layout {
+        let space = configuration.spacing
+        let lo: any Layout = switch visualStyle {
         case .page:
-            HStackLayout()
+            HStackLayout(spacing: space.width)
         case .grid:
-            FlowLayout(spacing: 4)
-//            FlowStackLayout(alignment: .center, spacing: 4)
+            FlowLayout(spacing: space.width)
         case .table:
-            VStackLayout()
+            VStackLayout(spacing: space.height)
         case .carousel:
-            HStackLayout()
+            HStackLayout(spacing: space.width)
         }
-        return AnyLayout(l)
+        return AnyLayout(lo)
     }
 }
 
@@ -358,7 +361,7 @@ extension Catalog where Element == Int {
                 .frame(minWidth: 100, minHeight: 100)
         })
         .padding()
-        .frame(width: 340, height: 400)
+        .frame(width: 360, height: 400)
         .border(.red)
         .padding()
 }

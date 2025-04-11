@@ -24,4 +24,18 @@ struct Test {
 ////        #expect(p == "media://color/module/orange")
     }
 
+    @Test func testJSON5() async throws {
+        let json = try JSONSerialization
+            .jsonObject(with: json5, options: [.json5Allowed])
+        print(json)
+        print("done")
+    }
 }
+
+let json5 = """
+{
+    "1": "alpha",
+    two: "beta",
+    _@node: "a node"
+}
+""".data(using: .utf8)!
