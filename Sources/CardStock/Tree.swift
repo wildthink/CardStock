@@ -6,22 +6,25 @@
 //
 import Foundation
 
+public protocol JSONValue: Sendable, Codable {}
+
 public final class Tree<Element> {
     public weak var parent: Tree?
     public var tag: String
     public var index: Int
-    public var attributes: [String: Any]
+    public var attributes: [String: JSONValue]
     public var element: Element
     public var children: [Tree]
     
     public var isRoot: Bool { parent == nil }
     public var isLeaf: Bool { children.isEmpty }
     public var hasChildren: Bool { !isLeaf }
+    public var depth: Int { 1 + (parent?.depth ?? -1) } // Root had depth == 0
     
     public init(
         parent: Tree? = nil,
         tag: String,
-        attributes: [String : Any] = [:],
+        attributes: [String : JSONValue] = [:],
         element: Element,
         children: [Tree] = []
     ) {
@@ -39,13 +42,21 @@ public final class Tree<Element> {
         tree.index = children.count
     }
     
-    public func attribute<A>(_ t: A.Type = A.self, named: String) -> A? {
+    public func attribute<A: JSONValue>(_ t: A.Type = A.self, named: String) -> A? {
         attributes[named] as? A
     }
-    public func attribute(set key: String, to value: Any) {
+    public func attribute(set key: String, to value: any JSONValue) {
         attributes[key] = value
     }
 }
+
+// MARK: JSONValue Conformances
+extension String: JSONValue {}
+extension Int: JSONValue {}
+extension Int64: JSONValue {}
+extension Double: JSONValue {}
+extension Array: JSONValue where Element: JSONValue {}
+extension Dictionary: JSONValue where Key == String, Value: JSONValue {}
 
 //extension Tree: Sendable where Element: Sendable {}
 

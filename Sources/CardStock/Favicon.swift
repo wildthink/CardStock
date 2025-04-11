@@ -31,8 +31,23 @@ public extension Favicon.Provider {
     }
 }
 
+public extension URL {
+    var domain: String? {
+        return host(percentEncoded: false)
+    }
+
+    func favicon(size: Favicon.Size, from provider: Favicon.Provider = .duckDuckGo) -> URL? {
+        provider.faviconURL(size: size, domain: domain)
+    }
+}
+
 public struct Favicon: View {
     
+    public enum Size: Int, CaseIterable {
+        case small = 16, medium = 32, large = 64, xlarge = 128, xxlarge = 256, xxxlarge = 512
+//        case s = 16, m = 32, l = 64, xl = 128, xxl = 256, xxxl = 512
+    }
+
     public struct Provider: @unchecked Sendable {
         let _faviconURL: (Size, String) -> URL?
         
@@ -90,10 +105,5 @@ public struct Favicon: View {
 //                .frame(width: width)
 //        }
 //	}
-	
-	public enum Size: Int, CaseIterable {
-        case small = 16, medium = 32, large = 64, xlarge = 128, xxlarge = 256, xxxlarge = 512
-//		case s = 16, m = 32, l = 64, xl = 128, xxl = 256, xxxl = 512
-	}
-	
+
 }

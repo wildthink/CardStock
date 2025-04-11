@@ -6,7 +6,7 @@
 
 # Jason
 
-@avatar { ![Jason](https://wildthink.com/apps/jason/Jason_AI.jpeg) }
+@avatar { ![Jason](https://wildthink.com/apps/jason/Jason_noir.jpeg) }
 
 @index(hints_column: swift)
 
@@ -16,6 +16,69 @@
     Amateur Social Scientist
     Tinker, Maker, Smith
     ```
+}
+
+@cv (role, company, timeframe, summary) {
+
+Founder
+WildThink, Inc
+Jun 2012 - Present · 12 yrs 11 mos
+WildThink services enterprises and high growth startups to design
+and build effective software products and systems. We design and
+develop solutions for modern mobile, web, and data-driven software
+in iOS, Node.js, Vertx.io, Java, Javascript, and other scalable
+technologies.WildThink services enterprises and high growth startups
+to design and build effective software products and systems. We
+design and develop solutions for modern mobile, web, and data-driven
+software in iOS, Node.js, Vertx.io, Java, Javascript, and other
+scalable technologies.
+
+
+Mobile Software Engineer (iOS)
+About Objects - Remote
+Sep 2021 - Jun 2024 · 2 yrs 10 mos
+- Designed and developed frameworks and Proof-of-Concept applications to facilitate the
+transition of an Objective-C and UIKit based application to Swift and SwiftUI.
+- Mentored and lead developers across multiple teams to implement SwiftUI architecture
+- Created and installed new frameworks included Networking, Caching, Styling and
+Theming in addition to reusable SwiftUI components.
+
+Mobile Systems Architect
+SightCall · Full-time
+Feb 2021 - Sep 2021 · 8 mos
+- Designed and developed enterprise iPad application for a SightCall customer, THS
+Remote Support Services.
+- Integrated and deployed SightCall proprietary audio-video conferencing frameworks into
+an enterprise remote services client (iPad application).
+- Worked with product, marketing, and customer team throughout the development to
+insure product viability and value.
+- Developed proof-of-concept AR applications for sales proposals.
+
+Sr Manager, Systems Architect
+Capital One
+Jul 2018 - Aug 2020 · 2 yrs 2 mos
+- Analyzed, evaluated, and developed architecture for mobile applications for the Retail
+and Direct Bank T ech (RDT) division of Capital One.
+- Created and integrated training for improved tooling and frameworks.
+- Designed, developed and integrated a new test framework using Cucumber into the
+pipeline.
+- Implemented handling and protection of sensitive data, iOS data binding for UI, deep link
+routing, analytics, snapshot testing.
+
+Patents
+``` text
+Methods and systems for generating location-based guidance based
+on interior conditions at a plurality of locations
+
+US 12047838 · Issued Jun 23, 2024
+[See patent](https://patents.google.com/patent/US12047838)
+
+FIELD OF THE INVENTION
+The invention relates to generating location-based guidance based
+on interior conditions at a plurality of locations.
+FIELD OF THE INVENTION The invention relates to generating location-
+based guidance based on interior conditions at a plurality of locations.
+```
 }
 
 @links {
