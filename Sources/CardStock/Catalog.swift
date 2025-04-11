@@ -23,7 +23,10 @@ public struct Catalog<T: Identifiable>: RandomAccessCollection {
     public var endIndex: Int { items.endIndex }
     
     public subscript(position: Int) -> T {
-        items[position]
+        get { items[position] }
+        _modify {
+            yield &items[position]
+        }
     }
 }
 
@@ -182,6 +185,35 @@ public struct CatalogViewConfiguration {
 }
 //}
 
+//extension View {
+//    @ViewBuilder
+//    func containerRelativeFrame(if cond: Bool, axis: Axis.Set
+//    ) -> some View {
+//        let mod = cond ? OptionalFrame(active: true, axis: axis) : EmptyModifier()
+//        modifier(mod)
+//    }
+//}
+
+
+struct OptionalFrame: ViewModifier {
+    let active: Bool
+    let axis: Axis.Set = [.vertical, .horizontal]
+    
+    func body(content: Content) -> some View {
+        Group {
+            if active {
+                content
+                    .containerRelativeFrame(axis) { length, axis in
+                        return length
+                    }
+            } else {
+                content
+            }
+        }
+    }
+}
+
+
 public struct CatalogView<Item: Identifiable, Tile: View>: View
 where Item.ID: Sendable
 {
@@ -192,6 +224,7 @@ where Item.ID: Sendable
     @State var visualStyle: VisualStyle = .page
     @State var scrollViewSize: CGSize = .zero
     @State var scrollPosition: ScrollPosition
+
     var showsIndicators: Bool { configuration.showsIndicators }
     
     public var body: some View {
@@ -205,7 +238,6 @@ where Item.ID: Sendable
                         ForEach(catalog) { item in
                             tile(item)
                                 .frame(proposed: proposedSize(in: gp))
-                                .border(.green)
                                 .id(item.id)
                         }
                     }
@@ -230,24 +262,30 @@ where Item.ID: Sendable
         self.catalog = catalog
         self.visualStyle = visualStyle
         self.scrollPosition = scrollPosition ?? ScrollPosition(idType: Item.ID.self)
-        //        self.showsIndicators = showsIndicators
         self.tile = tile
     }
     
     var axis: Axis.Set {
         switch visualStyle {
-        case .page, .carousel: .horizontal
-        case .table, .grid:   .vertical
+            case .page: .horizontal
+            case .carousel: .horizontal
+            case .table:   .vertical
+            case .grid: .vertical
         }
     }
     
-    func proposedSize(in gp: GeometryProxy) -> ProposedViewSize {
+    func proposedSize(in gp: GeometryProxy
+    ) -> ProposedViewSize {
         let (wd, ht) = (gp.size.width, gp.size.height)
         return switch visualStyle {
-        case .page: ProposedViewSize(width: wd, height: ht)
-        case .table: ProposedViewSize(width: wd, height: ht/4)
-        case .carousel: ProposedViewSize(width: wd/3, height: ht/2)
-        case .grid:ProposedViewSize(width: 80, height: 80)
+            case .page: rval(wd: wd, ht: ht)
+            case .table: rval(wd: wd, ht: nil)
+            case .carousel: .unspecified
+            case .grid: .unspecified
+        }
+
+        func rval(wd: CGFloat?, ht: CGFloat?) -> ProposedViewSize {
+            ProposedViewSize(width: wd, height: ht)
         }
     }
     
@@ -261,9 +299,6 @@ where Item.ID: Sendable
                 Text("\(catalog.count) items")
                     .font(.caption)
             }
-            //            if let id = scrollPosition.viewID {
-            //                Text("\(String(describing: id))")
-            //            }
             if configuration.showControls {
                 controls
                     .labelStyle(.iconOnly)
@@ -280,7 +315,6 @@ where Item.ID: Sendable
         }
     }
     
-//    @LayoutBuilder
     var layout: AnyLayout {
         let l: any Layout = switch visualStyle {
         case .page:
@@ -297,8 +331,32 @@ where Item.ID: Sendable
     }
 }
 
+struct LockupLayout: Layout {
+        
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        assert(subviews.count == 1)
+        return subviews[0].sizeThatFits(.unspecified)
+    }
+    
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        subviews[0]
+            .place(at: bounds.origin, proposal: proposal)
+    }
+}
+
+extension Catalog where Element == Int {
+    init(count: Int) {
+        self = Catalog<Int>("Int", Array(1...count))
+    }
+}
+
 #Preview {
-    CatalogView(catalog: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], tile: LockupTile.init)
+    CatalogView(
+        catalog: Catalog(count: 20),
+        tile: {
+            LockupTile(id: $0)
+                .frame(minWidth: 100, minHeight: 100)
+        })
         .padding()
         .frame(width: 340, height: 400)
         .border(.red)
