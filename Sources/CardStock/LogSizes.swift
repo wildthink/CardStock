@@ -12,27 +12,29 @@ public struct LayoutSizes {
     var proposed: ProposedViewSize = .unspecified
     var natural: CGSize = .zero
     var reported: CGSize = .zero
+    var visualStyle: VisualStyle = .page
 }
 
 extension LayoutSizes: CustomStringConvertible {
     public var description: String {
-        "Layout:\(label) [\(natural.pretty)]  \(proposed.pretty) -> \(reported.pretty)"
+        "Layout:\(label):\(visualStyle) [\(natural.pretty)]  \(proposed.pretty) -> \(reported.pretty)"
     }
 }
 
 public extension View {
     
-    func onLayout(_ label: String) -> some View {
-        LogSizes(label: label, reporter: { print($0) }) {
+    func onLayout(_ label: String, visualStyle: VisualStyle) -> some View {
+        LogSizes(label: label, visualStyle: visualStyle, reporter: { print($0) }) {
             self
         }
     }
 
     func onLayout(
         _ label: String,
+        visualStyle: VisualStyle,
         perform action: @escaping (LayoutSizes) -> Void
     ) -> some View {
-        LogSizes(label: label, reporter: action) { self }
+        LogSizes(label: label, visualStyle: visualStyle, reporter: action) { self }
     }
 
 }
@@ -62,8 +64,11 @@ extension ProposedViewSize {
 }
 
 struct LogSizes: Layout {
-    typealias Report = (LayoutSizes) -> Void
+    @Environment(\.bentoBoxAxis) var boxAxis
+//    @Environment(\.visualStyle) var visualStyle
     var label: String
+    var visualStyle: VisualStyle
+    typealias Report = (LayoutSizes) -> Void
     var reporter: Report? = nil
     
 //    func _report(_ sizes: LayoutSizes) {
@@ -79,7 +84,7 @@ struct LogSizes: Layout {
         guard let reporter else {
             return subviews[0].sizeThatFits(proposal)
         }
-        var report = LayoutSizes(label: label)
+        var report = LayoutSizes(label: label, visualStyle: visualStyle)
         report.proposed = proposal
         report.natural = subviews[0].sizeThatFits(.unspecified)
 //        print("Propose \(label): \(proposal.pretty)")
@@ -101,15 +106,15 @@ struct LogSizes: Layout {
     VStack {
         Text("Hello, world!")
             .font(.title)
-            .onLayout("Text")
+            .onLayout("Text", visualStyle: .page)
             .padding(10)
-            .onLayout("Padding")
+            .onLayout("Padding", visualStyle: .page)
             .background {
                 Color.orange.opacity(0.6)
                     .frame(width: 200, height: 200)
-                    .onLayout("Orange")
+                    .onLayout("Orange", visualStyle: .carousel)
             }
-            .onLayout("Background")
+            .onLayout("Background", visualStyle: .grid)
             .border(Color.red)
             .frame(width: proposedSize.width, height: proposedSize.height)
             .border(Color.green)

@@ -77,9 +77,14 @@ public struct LockupViewStyle {
 
 extension EnvironmentValues {
     @Entry var presentationAspect: PresentationAspect =  .hero
+    @Entry var visualStyle: VisualStyle = .page
 }
 
 public extension View {
+    func visualStyle(_ style: VisualStyle) -> some View {
+        environment(\.visualStyle, style)
+    }
+    
     func lockupStyle(configuration: CatalogViewConfiguration) -> some View {
         environment(\.catalogConfiguration, configuration)
     }
@@ -220,6 +225,8 @@ struct OptionalFrame: ViewModifier {
 public struct CatalogView<Item: Identifiable, Tile: View>: View
 where Item.ID: Sendable
 {
+//    @Environment(\.presentationAspect) var aspect
+    
     @Environment(\.catalogConfiguration) var configuration
     var catalog: Catalog<Item>
     @ViewBuilder var tile: (Item) -> Tile
@@ -240,7 +247,10 @@ where Item.ID: Sendable
                     layout {
                         ForEach(catalog) { item in
                             tile(item)
+                                .visualStyle(visualStyle)
                                 .frame(proposed: proposedSize(in: gp))
+                                .onLayout("Tile", visualStyle: visualStyle)
+//                                .lockupLayout(visualStyle: visualStyle, contentMode: .fit)
                                 .id(item.id)
                         }
                     }
@@ -297,6 +307,7 @@ where Item.ID: Sendable
         HStack {
             Text(catalog.name)
                 .font(.headline)
+            Text(String(describing: visualStyle))
             Spacer().frame(minWidth: 10)
             if configuration.showCount {
                 Text("\(catalog.count) items")
@@ -334,18 +345,18 @@ where Item.ID: Sendable
     }
 }
 
-struct LockupLayout: Layout {
-        
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        assert(subviews.count == 1)
-        return subviews[0].sizeThatFits(.unspecified)
-    }
-    
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        subviews[0]
-            .place(at: bounds.origin, proposal: proposal)
-    }
-}
+//struct LockupLayout: Layout {
+//        
+//    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+//        assert(subviews.count == 1)
+//        return subviews[0].sizeThatFits(.unspecified)
+//    }
+//    
+//    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+//        subviews[0]
+//            .place(at: bounds.origin, proposal: proposal)
+//    }
+//}
 
 extension Catalog where Element == Int {
     init(count: Int) {
@@ -359,9 +370,35 @@ extension Catalog where Element == Int {
         tile: {
             LockupTile(id: $0)
                 .frame(minWidth: 100, minHeight: 100)
+//                .onLayout("Tile")
         })
         .padding()
         .frame(width: 360, height: 400)
         .border(.red)
         .padding()
 }
+
+public struct SquareSizing: PresentationSizing {
+    public func proposedSize(for root: PresentationSizingRoot, context: PresentationSizingContext) -> ProposedViewSize {
+        print(#function)
+        return .init(width: 400, height: 400)
+    }
+}
+
+struct PaddedSizing: PresentationSizing {
+    func proposedSize(for root: PresentationSizingRoot, context: PresentationSizingContext) -> ProposedViewSize {
+        let size = root.sizeThatFits(.unspecified)
+        return ProposedViewSize(width: size.width + 100, height: size.height + 100)
+    }
+}
+
+extension PresentationSizing where Self == PaddedSizing {
+    static var padded: Self {
+        PaddedSizing()
+    }
+}
+
+//extension PresentationSizing where Self == SquareSizing {
+//    static var square: Self { SquareSizing() }
+//}
+

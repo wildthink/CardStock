@@ -115,6 +115,63 @@ extension ProposedViewSize: Codable {
     }
 }
 
+extension Color {
+    var spec: String {
+        String(describing: self)
+    }
+}
+
+let skyBlue = Color(red: 0.4627, green: 0.8392, blue: 1.0)
+let lemonYellow = Color(hue: 0.1639, saturation: 1, brightness: 1)
+let steelGray = Color(white: 0.4745)
+
+let colors: [Color] = [
+    skyBlue, lemonYellow, steelGray,
+    Color.blue,
+    Color("AppColor", bundle: .main),
+    Color("blue")
+]
+
+func info(color: Color) -> String {
+    guard let base = Mirror(reflecting: color).descendant("provider", "base")
+    else { return "" }
+    return String(describing: base)
+}
+
+func info(image: SwiftUI.Image) -> String {
+    guard let base = Mirror(reflecting: image).descendant("provider", "base")
+    else { return "" }
+    return String(describing: base)
+}
+
+#Preview {
+    VStack(alignment: .leading) {
+        ForEach (colors, id: \.self) { color in
+            let _ = print(color.description)
+            HStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(color)
+                    .frame(width: 32, height: 32)
+//                Text("Color: \(color.spec)")
+                Text("Info: \(info(color: color))")
+            }
+        }
+        HStack {
+            let img = Image(systemName: "apple.logo")
+//            let p = ImageProvider(for: img)
+            let p = info(image: img)
+            img
+            Text(String(describing: p))
+        }
+//        Text("Color blue: \(Color.blue.spec)")
+//        Text("Color skyBlue: \(skyBlue.spec)")
+//        Text("Color blue: \(Color.blue.description)")
+//        Text("Color AppColor: \(Color("AppColor"))")
+//        Text("Color AppColor: \(Color("blue"))")
+    }
+    .padding()
+}
+
 extension URL {
     init(scheme: String, path: String) {
         var parts = URLComponents()

@@ -112,6 +112,8 @@ public struct SchoolOfThoughtLogo: View {
         case pleaseAgree = "Please agree to the"
         case iAgree = "I agree to the"
         case weAgree = "We agree to the"
+        case iSupport = "I support the"
+        case weSupport = "We support the"
     }
 }
 

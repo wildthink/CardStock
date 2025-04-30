@@ -53,6 +53,12 @@ public extension UTType {
     static let persona: UTType =
     UTType(importedAs: "com.wildthink.persona", conformingTo: .contact)
 
+    static let socialRole: UTType =
+    UTType(importedAs: "com.wildthink.social.role", conformingTo: .relationship)
+
+    static let relationship: UTType =
+    UTType(importedAs: "com.wildthink.graph.relationship", conformingTo: .json)
+
     static let placemark: UTType =
     UTType(importedAs: "com.wildthink.placemark", conformingTo: .item)
 
